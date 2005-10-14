@@ -9,7 +9,7 @@
 #
 
 AC_PREREQ(2.57)
-AC_INIT([GLite EDS Client], [0.0.0])
+AC_INIT([GLite Data Hydra CLI], [0.0.0])
 AC_CONFIG_AUX_DIR([./project])
 AM_INIT_AUTOMAKE([1.6.3 subdir-objects])
 
@@ -17,7 +17,7 @@ AM_INIT_AUTOMAKE([1.6.3 subdir-objects])
 AC_COPYRIGHT([Copyright (c) 2004 The EU EGEE Project
 See LICENCE file for details
 ])
-AC_REVISION([$Revision: 1.1.1.1 $])
+AC_REVISION([$Revision: 1.2 $])
 
 #Environment.
 WORKDIR=`pwd`
