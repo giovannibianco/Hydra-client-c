@@ -1,0 +1,33 @@
+\documentclass[a4paper]{datagridreport}
+\usepackage{makeidx}
+\usepackage{fancyhdr}
+\usepackage{multicol}
+\usepackage{float}
+\usepackage{textcomp}
+\usepackage{alltt}
+\usepackage{times}
+\usepackage{doxygen}
+\makeindex
+\setcounter{tocdepth}{1}
+\title{@BUILD.TITLE@}
+\author{EDG WP2}
+\DocIdentifier{@BUILD.MODULE@-@BUILD.VERSION@-@BUILD.RELEASE@}
+\EDMSid{...}
+\WorkPackage{WP2}
+\Partner{CERN}
+\LeadPartner{CERN}
+\DocStatus{WORKING DRAFT}
+\Subtitle{API Documentation} 
+\Dissemination{PUBLIC}
+\Abstract{@BUILD.DESCRIPTION@}
+\begin{document}
+\section{Glite Encrypted Data Storage Client Directory Documentation}
+\input{dir_000004}
+\input{dir_000002}
+\input{dir_000001}
+\input{dir_000003}
+\input{dir_000000}
+\section{Glite Encrypted Data Storage Client File Documentation}
+\input{eds-simple_8h}
+\printindex
+\end{document}

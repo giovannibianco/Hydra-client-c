@@ -1,0 +1,25 @@
+<!--
+	Copyright (c) 2004 on behalf of the EU EGEE Project: 
+	The European Organization for Nuclear Research (CERN), 
+	Istituto Nazionale di Fisica Nucleare (INFN), Italy
+	Datamat Spa, Italy
+	Centre National de la Recherche Scientifique (CNRS), France
+	CS Systeme d'Information (CSSI), France
+	Royal Institute of Technology, Center for Parallel Computers (KTH-PDC), Sweden
+	Universiteit van Amsterdam (UvA), Netherlands
+	University of Helsinki (UH.HIP), Finland
+	University of Bergen (UiB), Norway
+	Council for the Central Laboratory of the Research Councils (CCLRC), United Kingdom
+
+	Authors: Zoltan Farkas <Zoltan.Farkas@cern.ch>
+	
+-->
+<!-- ======================================================
+             Define extra properties here ...
+     ====================================================== -->
+    
+<project name="configure options">                                                                        
+    <property name="extra.configure.args" value=""/>
+    <property name="configure.args"
+    	value="${extra.configure.args} --with-version=${module.version} --prefix=${stage.abs.dir} --with-glite-location=${with.glite.location} --with-dist-location=${with.dist.location} --with-globus-prefix=${with.globus.prefix} --with-globus-thr-flavor=${with.globus.dbg.thr.flavor} --with-globus-nothr-flavor=${with.globus.dbg.nothr.flavor} --with-log4cpp-prefix=${repository}/${ext.log4cpp.subdir}"/>
+</project>

@@ -1,0 +1,90 @@
+#
+#  Copyright (c) Members of the EGEE Collaboration. 2004.
+#  See http://eu-egee.org/partners/ for details on the copyright holders.
+#  For license conditions see the license file or http://eu-egee.org/license.html
+#
+#  configure.ac file for the EDS client module
+#
+#  Authors: Zoltan Farkas <Zoltan.Farkas@cern.ch>
+#
+
+AC_PREREQ(2.57)
+AC_INIT([GLite EDS Client], [0.0.0])
+AC_CONFIG_AUX_DIR([./project])
+AM_INIT_AUTOMAKE([1.6.3 subdir-objects])
+
+# Notices.
+AC_COPYRIGHT([Copyright (c) 2004 The EU EGEE Project
+See LICENCE file for details
+])
+AC_REVISION([$Revision: 1.1.1.1 $])
+
+#Environment.
+WORKDIR=`pwd`
+AC_SUBST(WORKDIR)
+
+# Check for the basic compile environment.
+AC_PROG_CC
+AC_PROG_CPP
+AC_PROG_CXX
+AC_PROG_CXXCPP
+AM_PROG_CC_C_O
+AC_PROG_LIBTOOL
+AC_PROG_LN_S
+
+# Check for the basic compile environment.
+AC_PROG_INSTALL
+AC_PROG_MAKE_SET
+
+# Look for xsltproc & manpage stylesheets                                                                                                                               
+GLITE_DOCBOOK_MAN
+
+dnl Standard warnings.
+WARNINGS=""
+#WARNINGS="-Wall -Wpointer-arith -Wmissing-prototypes -Woverloaded-virtual -Wmissing-declarations 
+#-Wcast-align -Wwrite-strings -Wformat"
+
+# default compiler flags
+am_cxx_flags="$WARNINGS $am_cxx_flags"
+
+# default linker flags
+am_ld_flags="$am_ld_flags"
+
+# Arguments.
+
+AC_ARG_ENABLE(
+	[debug],
+	[  --enable-debug     Produce an executable with debugging symbols],
+	[CXXFLAGS="-g -D_DEBUG $CXXFLAGS"])
+
+################################################################################
+# Check for available functions.
+
+# Check for header files.
+AC_CHECK_HEADERS([\
+	fcntl.h\
+	sys/types.h\
+	])
+
+have_globus=no
+AC_GLOBUS([], have_globus=yes, have_globus=no)
+
+MAKEDEPEND="\$(CXX) -M"
+
+am_cxx_flags="$am_cxx_flags -I $prefix/include"
+
+AM_PATH_LOG4CPP
+
+AC_GLITE
+AC_GLITE_VERSION
+
+# Configuration items
+AC_PREFIX_DEFAULT([/opt/glite])
+AM_CONFIG_HEADER([src/autogen/config.h])
+AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([interface/Makefile])
+AC_CONFIG_FILES([src/Makefile])
+AC_CONFIG_FILES([src/c/Makefile])
+AC_CONFIG_FILES([src/utils/Makefile])
+
+AC_OUTPUT
