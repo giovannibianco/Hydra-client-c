@@ -153,13 +153,11 @@ int glite_eds_put_metadata(char *lfn, char *hex_key, char *hex_iv, char *cipher,
 /**
  * Helper function - register a new file in fireman catalog
  */
-int glite_eds_put_fireman(char *lfn, char *surl, char **error)
+int glite_eds_put_fireman(char *lfn, char *id, char **error)
 {
+    const char *SURL_prefix = "srm://";
     glite_catalog_ctx *ctx;
-    glite_catalog_SURLEntry *surl_entry;
-    glite_catalog_FRCEntry *rentry;
-    glite_catalog_FCEntry *entry;
-
+ 
     if (NULL == (ctx = glite_catalog_new(NULL)))
     {
 	const char *catalog_err;
@@ -169,20 +167,43 @@ int glite_eds_put_fireman(char *lfn, char *surl, char **error)
 	return -1;
     }
 
-    surl_entry = glite_catalog_SURLEntry_new(NULL, surl, 1);
-    rentry = glite_catalog_FRCEntry_new(ctx, lfn);
-    glite_catalog_FRCEntry_addSurl(ctx, rentry, surl_entry);
-
-    if (glite_fireman_create(ctx, rentry))
+    if (!strncmp(id, SURL_prefix, strlen(SURL_prefix)))
     {
-	const char *catalog_err;
-	catalog_err = glite_catalog_get_error(ctx);
-
-	asprintf(error, "glite_eds_put_fireman error: %s", catalog_err);
-	return -1;
+	glite_catalog_SURLEntry *surl_entry;
+	glite_catalog_FRCEntry *rentry;
+	
+	surl_entry = glite_catalog_SURLEntry_new(NULL, id, 1);
+	rentry = glite_catalog_FRCEntry_new(ctx, lfn);
+	glite_catalog_FRCEntry_addSurl(ctx, rentry, surl_entry);
+	
+	if (glite_fireman_create(ctx, rentry))
+	{
+	    const char *catalog_err;
+	    catalog_err = glite_catalog_get_error(ctx);
+	    
+	    asprintf(error, "glite_eds_put_fireman error: %s", catalog_err);
+	    return -1;
+	}
     }
-    glite_catalog_free(ctx);
+    else
+    {
+ 	glite_catalog_FRCEntry *entry;
+	
+	entry = glite_catalog_FRCEntry_new(ctx, lfn);
+	glite_catalog_FRCEntry_setGuid(ctx, entry, id);
 
+ 	if (glite_fireman_create(ctx, entry))
+	{
+	    const char *catalog_err;
+	    catalog_err = glite_catalog_get_error(ctx);
+	    
+	    asprintf(error, "glite_eds_put_fireman error: %s", catalog_err);
+	    return -1;
+	}
+    }
+
+    glite_catalog_free(ctx);
+    
     return 0;
 }
 
@@ -284,9 +305,10 @@ EVP_CIPHER_CTX *glite_eds_init(char *lfn, char **key, char **iv,
 /**
  * Register a new file in Hydra: create metadata entries (key/iv/...)
  */
-int glite_eds_register(char *lfn, char *surl, char *cipher, char **error)
+int glite_eds_register(char *lfn, char *id, char *cipher, int keysize,
+    char **error)
 {
-    char *key, *iv, *cipher_to_use, *hex_key, *hex_iv;
+    char *key, *iv, *cipher_to_use, *hex_key, *hex_iv, *keyl_str;
     int keyLength, ivLength;
     const EVP_CIPHER *type;
 
@@ -308,7 +330,7 @@ int glite_eds_register(char *lfn, char *surl, char *cipher, char **error)
 
     /* Initialize encryption key and initialization vector */
     ivLength = EVP_CIPHER_iv_length(type);
-    keyLength = EVP_CIPHER_key_length(type);
+    keyLength = (keysize) ? (keysize >> 3) : EVP_CIPHER_key_length(type);
     if (NULL == (iv = (char *)malloc(ivLength)))
     {
 	asprintf(error, "glite_eds_register error: malloc() of %d bytes "
@@ -337,22 +359,23 @@ int glite_eds_register(char *lfn, char *surl, char *cipher, char **error)
     }
 
     /* Do the Metadata Catalog stuff */
-    if (glite_eds_put_metadata(lfn, hex_key, hex_iv, cipher_to_use, "128", error))
+    asprintf(&keyl_str, "%d", keyLength<<3);
+    if (glite_eds_put_metadata(lfn, hex_key, hex_iv, cipher_to_use, keyl_str, error))
     {
 	return -1;
     }
 
-    /* If SURL is present, create Fireman Catalog entry */
-    if (surl)
+    /* If id (SURL/GUID) is present, create Fireman Catalog entry */
+    if (id)
     {
-        if (glite_eds_put_fireman(lfn, surl, error))
+        if (glite_eds_put_fireman(lfn, id, error))
 	{
 	    return -1;
 	}
     }
 
 
-    free(iv); free(hex_iv); free(key); free(hex_key);
+    free(iv); free(hex_iv); free(key); free(hex_key); free(keyl_str);
     
     return 0;
 }
@@ -360,19 +383,11 @@ int glite_eds_register(char *lfn, char *surl, char *cipher, char **error)
 /**
  * Register a new file in Hydra: create metadata entries (key/iv/...),
  * initalizes encryption context
- * 
- * @param lfn The name of the remote file.
- * @param surl The SURL of the remote file.
- * @param [OUT] error Pointer to the error string.
- *
- * @return Encryption context in case of no error. In other cases NULL is
- *  returned, and *error contains the error string. The caller is responsible
- *  for freeing the allocated error string.
  */
-EVP_CIPHER_CTX *glite_eds_register_encrypt_init(char *lfn, char *surl,
-    char *cipher, char **error)
+EVP_CIPHER_CTX *glite_eds_register_encrypt_init(char *lfn, char *id,
+    char *cipher, int keysize, char **error)
 {
-    char *key, *hex_key, *iv, *hex_iv, *cipher_to_use, *try;
+    char *key, *hex_key, *iv, *hex_iv, *cipher_to_use, *keyl_str;
     int keyLength, ivLength;
     EVP_CIPHER_CTX *ectx;
     const EVP_CIPHER *type;
@@ -404,7 +419,7 @@ EVP_CIPHER_CTX *glite_eds_register_encrypt_init(char *lfn, char *surl,
 
     /* Initialize encryption key and initialization vector */
     ivLength = EVP_CIPHER_iv_length(type);
-    keyLength = EVP_CIPHER_key_length(type);
+    keyLength = (keysize) ? (keysize >> 3) : EVP_CIPHER_key_length(type);
     if (NULL == (iv = (char *)malloc(ivLength)))
     {
 	asprintf(error, "glite_eds_register_encrypt_init error: malloc() of %d "
@@ -440,16 +455,18 @@ EVP_CIPHER_CTX *glite_eds_register_encrypt_init(char *lfn, char *surl,
     EVP_EncryptInit(ectx, NULL, key, iv);
 
     /* Do the Metadata Catalog stuff */
-    if (glite_eds_put_metadata(lfn, hex_key, hex_iv, cipher_to_use, "128", error))
+    asprintf(&keyl_str, "%d", keyLength << 3);
+    if (glite_eds_put_metadata(lfn, hex_key, hex_iv, cipher_to_use, keyl_str, error))
     {
         free(ectx);
 	return NULL;
     }
+    free(keyl_str);
 
-    /* If SURL is present, create Fireman Catalog entry */
-    if (surl)
+    /* If id (SURL/GUID) is present, create Fireman Catalog entry */
+    if (id)
     {
-        if (glite_eds_put_fireman(lfn, surl, error))
+        if (glite_eds_put_fireman(lfn, id, error))
 	{
 	    free(ectx);
 	    return NULL;
@@ -462,13 +479,6 @@ EVP_CIPHER_CTX *glite_eds_register_encrypt_init(char *lfn, char *surl,
 /**
  * Initialize encryption context for a file. Query key/iv pairs from
  * metadata catalog
- *
- * @param lfn The name of the remote file.
- * @param [OUT] error Pointer to the error string.
- *
- * @return Encryption context in case of no error. In other cases NULL is
- *  returned, and *error contains the error string. The caller is responsible
- *  for freeing the allocated error string.
  */
 EVP_CIPHER_CTX *glite_eds_encrypt_init(char *lfn, char **error)
 {
@@ -490,13 +500,6 @@ EVP_CIPHER_CTX *glite_eds_encrypt_init(char *lfn, char **error)
 /**
  * Initialize decryption context for a file. Query key/iv pairs from
  * metadata catalog
- *
- * @param lfn The name of the remote file.
- * @param [OUT] error Pointer to the error string.
- *
- * @return Decryption context in case of no error. In other cases NULL is
- *  returned, and *error contains the error string. The caller is responsible
- *  for freeing the allocated error string.
  */
 EVP_CIPHER_CTX *glite_eds_decrypt_init(char *lfn, char **error)
 {
@@ -517,16 +520,6 @@ EVP_CIPHER_CTX *glite_eds_decrypt_init(char *lfn, char **error)
 
 /**
  * Encrypts a memory block using the encryption context
- * 
- * @param ctx Encryption context 
- * @param mem_in Memory block to encrypt
- * @param mem_in_size Memory block size
- * @param [OUT] mem_out Encrypted memory block's address
- * @param [OUT] mem_out_size Encrypted memory block's size
- *
- * @return 0 in case of there was no error. In other cases, *error contains
- *  the error string. The caller is responsible for freeing the allocated string
- *  and the returned memory block in case of success
  */
 int glite_eds_encrypt_block(EVP_CIPHER_CTX *ectx, char *mem_in, int mem_in_size,
     char **mem_out, int *mem_out_size, char **error)
@@ -553,16 +546,6 @@ int glite_eds_encrypt_block(EVP_CIPHER_CTX *ectx, char *mem_in, int mem_in_size,
 
 /**
  * Finalizes a block encryption
- * 
- * @param ctx Encryption context 
- * @param mem_in Memory block to encrypt
- * @param mem_in_size Memory block size
- * @param [OUT] mem_out Encrypted memory block's address
- * @param [OUT] mem_out_size Encrypted memory block's size
- *
- * @return 0 in case of there was no error. In other cases, *error contains
- *  the error string. The caller is responsible for freeing the allocated string
- *  and the returned memory block in case of success
  */
 int glite_eds_encrypt_final(EVP_CIPHER_CTX *ectx, char **mem_out, int *mem_out_size, char **error)
 {
@@ -587,16 +570,6 @@ int glite_eds_encrypt_final(EVP_CIPHER_CTX *ectx, char **mem_out, int *mem_out_s
 
 /**
  * Decrypts a memory block using the decryption context
- * 
- * @param ctx Decryption context 
- * @param mem_in Memory block to decrypt
- * @param mem_in_size Memory block size
- * @param [OUT] mem_out Decrypted memory block's address
- * @param [OUT] mem_out_size Decrypted memory block's size
- *
- * @return 0 in case of there was no error. In other cases, *error contains
- *  the error string. The caller is responsible for freeing the allocated string
- *  and the returned memory block in case of success
  */
 int glite_eds_decrypt_block(EVP_CIPHER_CTX *dctx, char *mem_in,  int mem_in_size,
     char **mem_out, int *mem_out_size, char **error)
@@ -623,17 +596,6 @@ int glite_eds_decrypt_block(EVP_CIPHER_CTX *dctx, char *mem_in,  int mem_in_size
 
 /**
  * Finalizes memory block decryption
- * 
-
- * @param ctx Decryption context 
- * @param mem_in Memory block to decrypt
- * @param mem_in_size Memory block size
- * @param [OUT] mem_out Decrypted memory block's address
- * @param [OUT] mem_out_size Decrypted memory block's size
- *
- * @return 0 in case of there was no error. In other cases, *error contains
- *  the error string. The caller is responsible for freeing the allocated string
- *  and the returned memory block in case of success
  */
 int glite_eds_decrypt_final(EVP_CIPHER_CTX *dctx, char **mem_out, int *mem_out_size, char **error)
 {
@@ -658,12 +620,6 @@ int glite_eds_decrypt_final(EVP_CIPHER_CTX *dctx, char **mem_out, int *mem_out_s
 
 /**
  * Finalize an encryption/decryption context
- *
- * @param ctx Encryption/decryption context
- *
- * @return 0 in case of there was no error. In other cases, *error contains
- *  the error string. The caller is responsible for freeing the allocated string
- *  and the returned memory block in case of success
  */
 int glite_eds_finalize(EVP_CIPHER_CTX *ctx, char **error)
 {
@@ -673,12 +629,6 @@ int glite_eds_finalize(EVP_CIPHER_CTX *ctx, char **error)
 
 /**
  * Unregister catalog entries in case of error (key/iv)
- *
- * @param lfn The name of the remote file.
- *
- * @return 0 in case of there was no error. In other cases, *error contains
- *  the error string. The caller is responsible for freeing the allocated string
- *  and the returned memory block in case of success
  */
 int glite_eds_unregister(char *lfn, char **error)
 {

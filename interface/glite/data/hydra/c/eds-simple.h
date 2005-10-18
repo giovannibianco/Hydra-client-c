@@ -24,30 +24,33 @@ extern "C" {
  * Register a new file in Hydra: create metadata entries (key/iv/...)
  * 
  * @param lfn The name of the remote file.
- * @param surl The SURL of the remote file.
+ * @param id The SURL or GUID of the remote file.
  * @param cipher The cipher name to use.
+ * @param keysize Key size to use in bits.
  * @param [OUT] error Pointer to the error string.
  *
  * @return 0 in case of no error. In other cases *error contains the error
  *  string. The caller is responsible for freeing the allocated error string.
  */
-int glite_eds_register(char *lfn, char *surl, char *cipher, char **error);
+int glite_eds_register(char *lfn, char *id, char *cipher, int keysize,
+    char **error);
 
 /**
  * Register a new file in Hydra: create metadata entries (key/iv/...),
  * initalizes encryption context
  * 
  * @param lfn The name of the remote file.
- * @param surl The SURL of the remote file.
+ * @param id The SURL or GUID of the remote file.
  * @param cipher The cipher name to use.
+ * @param keysize Key size to use in bits.
  * @param [OUT] error Pointer to the error string.
  *
  * @return Encryption context in case of no error. In other cases NULL is
  *  returned, and *error contains the error string. The caller is responsible
  *  for freeing the allocated error string.
  */
-EVP_CIPHER_CTX *glite_eds_register_encrypt_init(char *lfn, char *surl,
-    char *cipher, char **error);
+EVP_CIPHER_CTX *glite_eds_register_encrypt_init(char *lfn, char *id,
+    char *cipher, int keysize, char **error);
 
 /**
  * Initialize encryption context for a file. Query key/iv/... from
