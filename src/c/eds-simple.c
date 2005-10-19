@@ -623,7 +623,7 @@ int glite_eds_decrypt_final(EVP_CIPHER_CTX *dctx, char **mem_out, int *mem_out_s
  */
 int glite_eds_finalize(EVP_CIPHER_CTX *ctx, char **error)
 {
-    EVP_cleanup();
+    EVP_CIPHER_CTX_cleanup(ctx);
     return 0;
 }
 
