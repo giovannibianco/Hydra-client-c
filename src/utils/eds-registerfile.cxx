@@ -9,6 +9,10 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
@@ -17,7 +21,6 @@
 #include <glite/data/io/client/ioclient.h>
 
 #define PROGNAME     "glite-eds-register"
-#define PROGVERSION  "1.1"
 #define PROGAUTHOR   "(C) EGEE"
 
 #define TRACE_LOG(a)  if(!silent) fprintf a
@@ -25,7 +28,7 @@
 
 void print_usage_and_die(FILE * out){
     fprintf(out, "\n");
-    fprintf(out, "<%s> Version %s by %s\n", PROGNAME, PROGVERSION, PROGAUTHOR);
+    fprintf(out, "<%s> Version %s by %s\n", PROGNAME, PACKAGE_VERSION, PROGAUTHOR);
     fprintf(out, "usage: %s <localfilename> <remotefilename> <SURL/GUID> <outfilename>\n", PROGNAME);
     fprintf(out, " Optional parameters:\n");
     fprintf(out, "  -v : verbose mode\n");

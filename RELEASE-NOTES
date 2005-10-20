@@ -3,8 +3,7 @@
     o API: it is possible to specify key size
     o CLI: it is possible to specify cipher and key size
     o cleanup function fixed
-    o docs update
-
+    o docs update (man pages and API doc)
 
 *** Release glite-data-hydra-cli_R_1_0_0 2005-10-14
 
