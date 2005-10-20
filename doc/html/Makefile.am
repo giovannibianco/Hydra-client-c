@@ -6,18 +6,12 @@
 #  Common doc/html/Makefile.am file for the GLite Data IO Client module
 #
 #  Authors: Akos Frohner <Akos.Frohner@cern.ch>
-#  Version info: $Id: Makefile.am,v 1.1 2005-10-20 08:26:53 szamsu Exp $
+#  Version info: $Id: Makefile.am,v 1.2 2005-10-20 09:38:42 szamsu Exp $
 #  Release: $Name: not supported by cvs2svn $
 #
 #
 commonutdir = $(datadir)/doc/$(PACKAGE)/html
 dist_commonut_DATA = \
-	dir_000000.html \
-	dir_000001.html \
-	dir_000002.html \
-	dir_000003.html \
-	dir_000004.html \
-	dirs.html \
 	doxygen.css \
 	doxygen.png \
 	eds-simple_8h-source.html \

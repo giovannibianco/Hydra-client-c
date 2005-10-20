@@ -18,7 +18,7 @@ AM_INIT_AUTOMAKE([1.6.3 subdir-objects])
 AC_COPYRIGHT([Copyright (c) 2004 The EU EGEE Project
 See LICENCE file for details
 ])
-AC_REVISION([$Revision: 1.4 $])
+AC_REVISION([$Revision: 1.5 $])
 
 #Environment.
 WORKDIR=`pwd`
@@ -89,34 +89,6 @@ AM_PATH_LOG4CPP
 
 # Look for xsltproc & manpage stylesheets
 GLITE_DOCBOOK_MAN
-
-# Check that the catalog-fireman-api-c package is available
-save_CPPFLAGS="$CPPFLAGS"
-save_LDFLAGS="$LDFLAGS"
-save_LIBS="$LIBS"
-CPPFLAGS="$CPPFLAGS $GLITE_CFLAGS $GSOAP_CFLAGS"
-LDFLAGS="$LDFLAGS -L$GLITE_LOCATION/lib"
-AC_CHECK_HEADER([glite/data/catalog/fireman/c/firemanStub.h],,
-	[AC_MSG_ERROR([Headers from the org.glite.data.catalog-fireman-api-c package are not available])])
-dnl AC_CHECK_LIB([glite_data_catalog_fireman_api_c], [soap_call_fireman__getVersion],,
-dnl 	[AC_MSG_ERROR([Libraries from the org.glite.data.catalog-fireman-api-c package are not available])])
-LIBS="$save_LIBS"
-LDFLAGS="$save_LDFLAGS"
-CPPFLAGS="$save_CPPFLAGS"
-
-# Check that the catalog-meta-api-c package is available
-save_CPPFLAGS="$CPPFLAGS"
-save_LDFLAGS="$LDFLAGS"
-save_LIBS="$LIBS"
-CPPFLAGS="$CPPFLAGS $GLITE_CFLAGS $GSOAP_CFLAGS"
-LDFLAGS="$LDFLAGS -L$GLITE_LOCATION/lib"
-AC_CHECK_HEADER([glite/data/catalog/metadata/c/metadataStub.h],,
-	[AC_MSG_ERROR([Headers from the org.glite.data.catalog-meta-api-c package are not available])])
-dnl AC_CHECK_LIB([glite_data_catalog_metadata_api_c], [soap_call_metadata__getVersion],,
-dnl 	[AC_MSG_ERROR([Libraries from the org.glite.data.catalog-meta-api-c package are not available])])
-LIBS="$save_LIBS"
-LDFLAGS="$save_LDFLAGS"
-CPPFLAGS="$save_CPPFLAGS"
 
 # Location of the HTML documentation
 AC_ARG_WITH([htmldir],
