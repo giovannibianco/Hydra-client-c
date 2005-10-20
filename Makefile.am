@@ -16,7 +16,7 @@
 ## *
 ## *********************************************************************
 
-SUBDIRS		= interface src
+SUBDIRS		= interface src doc
 
 commonutdir = $(datadir)/doc/$(PACKAGE)
 dist_commonut_DATA = RELEASE-NOTES LICENSE

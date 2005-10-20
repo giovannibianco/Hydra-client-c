@@ -82,6 +82,9 @@
 		<exec executable="doxygen">
 		    <arg value="config/Doxyfile"/>
 		</exec>
+		<copy todir="doc/html">
+    			<fileset dir="doc/autogen/html"/>
+	  	</copy>
 	</target>
 	
 	<!--
@@ -98,6 +101,9 @@
 	
 	<target name="localclean" description="Module specific cleaning tasks">
 	    <delete dir="doc/autogen"/>
+		<delete>
+            <fileset dir="doc/html" includes="*.html *.png *.css"/>
+        </delete>
 	</target>
 
 </project>

@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+       	"http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY common-gliteio-env SYSTEM "common-gliteio-env.xml">
+]>
+
+<refentry id="glite-eds-rm.1" revision="$Revision: 1.1 $">
+
+<refentryinfo>
+    <!-- These information are shown on the manpage -->
+    <author>
+	<firstname>Zoltan</firstname>
+	<surname>Farkas</surname>
+    </author>
+    <date>March 2005</date>
+    <productname>GLite</productname>
+    <title>gLite Data Management</title>
+
+    <!-- These information are not shown -->
+    <copyright>
+	<year>2005</year>
+	<holder>Members of the EGEE Collaboration</holder>
+    </copyright>
+</refentryinfo>
+
+<refmeta>
+    <refentrytitle>glite-eds-rm</refentrytitle>
+    <manvolnum>1</manvolnum>
+</refmeta>
+
+<refnamediv>
+    <refname>glite-eds-rm</refname>
+    <refpurpose>
+        Removes a file using gLite I/O
+    </refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+    <cmdsynopsis>
+	<command>glite-eds-rm</command>
+
+        <group>
+		<arg choice="plain"><option>-h</option></arg>
+	</group>
+	<group>
+		<arg choice="plain"><option>-q</option></arg>
+	</group>
+	<group>
+	        <arg choice="plain"><option>-v</option></arg>
+	</group>
+	<group>
+		<arg choice="plain"><option>-s <replaceable>SERVICE</replaceable></option></arg>
+	</group>
+        <arg choice="plain"><option><replaceable>REMOTE_FILE</replaceable></option></arg>
+
+    </cmdsynopsis>
+</refsynopsisdiv>
+
+<refsect1>
+    <title>DESCRIPTION</title>
+    <para>
+	<command>glite-eds-rm</command> is a command-line tool for deleting a remote file from
+	a gLite I/O server.
+    </para>
+</refsect1>
+
+<refsect1>
+    <title>OPTIONS</title>
+    <variablelist>
+
+	<varlistentry>
+	    <term>
+		<group choice="plain">
+		    <arg choice="plain"><option>-h</option></arg>
+		</group>
+	    </term>
+	    <listitem><para>
+	        Show help screen.
+	    </para></listitem>
+	</varlistentry>
+
+	<varlistentry>
+	    <term>
+		<group choice="plain">
+		    <arg choice="plain"><option>-q</option></arg>
+		</group>
+	    </term>
+	    <listitem><para>
+	        Quiet operation.
+	    </para></listitem>
+	</varlistentry>
+
+	<varlistentry>
+	    <term>
+		<group choice="plain">
+		    <arg choice="plain"><option>-v</option></arg>
+		</group>
+	    </term>
+	    <listitem><para>
+	        Verbose operation.
+	    </para></listitem>
+	</varlistentry>
+
+	<varlistentry>
+	    <term>
+		<group choice="plain">
+		    <arg choice="plain"><option>-s <replaceable>SERVICE</replaceable></option></arg>
+		</group>
+	    </term>
+	    <listitem><para>
+	        If <option><replaceable>SERVICE</replaceable></option> starts with <userinput>gliteio://</userinput>,
+		then it it used as the gLite I/O service URL.
+		Otherwise <option><replaceable>SERVICE</replaceable></option> is taken as a service name, and
+		serives discovery is used to determine the service endpoint.
+	    </para></listitem>
+	</varlistentry>
+
+        <varlistentry>
+	    <term><option><replaceable>REMOTE_FILE</replaceable></option></term>
+	    <listitem><para>
+	        The name of the remote file to delete.
+	    </para></listitem>
+	</varlistentry>
+    </variablelist>
+</refsect1>
+
+&common-gliteio-env;
+
+</refentry>
+<!-- vim: set ai sw=4: -->

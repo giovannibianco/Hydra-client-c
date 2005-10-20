@@ -17,7 +17,7 @@ AM_INIT_AUTOMAKE([1.6.3 subdir-objects])
 AC_COPYRIGHT([Copyright (c) 2004 The EU EGEE Project
 See LICENCE file for details
 ])
-AC_REVISION([$Revision: 1.2 $])
+AC_REVISION([$Revision: 1.3 $])
 
 #Environment.
 WORKDIR=`pwd`
@@ -31,13 +31,18 @@ AC_PROG_CXXCPP
 AM_PROG_CC_C_O
 AC_PROG_LIBTOOL
 AC_PROG_LN_S
+# Make libtool less verbose
+LIBTOOL="$LIBTOOL --silent"
+
+# Turn on warnings
+if test "$ac_cv_c_compiler_gnu" = yes; then
+	CFLAGS="$CFLAGS -Wall -W -Wmissing-prototypes"
+fi
 
 # Check for the basic compile environment.
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 
-# Look for xsltproc & manpage stylesheets                                                                                                                               
-GLITE_DOCBOOK_MAN
 
 dnl Standard warnings.
 WARNINGS=""
@@ -66,8 +71,14 @@ AC_CHECK_HEADERS([\
 	sys/types.h\
 	])
 
+# Set Globus Properties
 have_globus=no
 AC_GLOBUS([], have_globus=yes, have_globus=no)
+AC_MSG_RESULT(["GLOBUS found $have_globus"])
+
+# Set GLite Properties
+AC_GLITE
+AC_GLITE_VERSION
 
 MAKEDEPEND="\$(CXX) -M"
 
@@ -75,8 +86,44 @@ am_cxx_flags="$am_cxx_flags -I $prefix/include"
 
 AM_PATH_LOG4CPP
 
-AC_GLITE
-AC_GLITE_VERSION
+# Look for xsltproc & manpage stylesheets
+GLITE_DOCBOOK_MAN
+
+# Check that the catalog-fireman-api-c package is available
+save_CPPFLAGS="$CPPFLAGS"
+save_LDFLAGS="$LDFLAGS"
+save_LIBS="$LIBS"
+CPPFLAGS="$CPPFLAGS $GLITE_CFLAGS $GSOAP_CFLAGS"
+LDFLAGS="$LDFLAGS -L$GLITE_LOCATION/lib"
+AC_CHECK_HEADER([glite/data/catalog/fireman/c/firemanStub.h],,
+	[AC_MSG_ERROR([Headers from the org.glite.data.catalog-fireman-api-c package are not available])])
+dnl AC_CHECK_LIB([glite_data_catalog_fireman_api_c], [soap_call_fireman__getVersion],,
+dnl 	[AC_MSG_ERROR([Libraries from the org.glite.data.catalog-fireman-api-c package are not available])])
+LIBS="$save_LIBS"
+LDFLAGS="$save_LDFLAGS"
+CPPFLAGS="$save_CPPFLAGS"
+
+# Check that the catalog-meta-api-c package is available
+save_CPPFLAGS="$CPPFLAGS"
+save_LDFLAGS="$LDFLAGS"
+save_LIBS="$LIBS"
+CPPFLAGS="$CPPFLAGS $GLITE_CFLAGS $GSOAP_CFLAGS"
+LDFLAGS="$LDFLAGS -L$GLITE_LOCATION/lib"
+AC_CHECK_HEADER([glite/data/catalog/metadata/c/metadataStub.h],,
+	[AC_MSG_ERROR([Headers from the org.glite.data.catalog-meta-api-c package are not available])])
+dnl AC_CHECK_LIB([glite_data_catalog_metadata_api_c], [soap_call_metadata__getVersion],,
+dnl 	[AC_MSG_ERROR([Libraries from the org.glite.data.catalog-meta-api-c package are not available])])
+LIBS="$save_LIBS"
+LDFLAGS="$save_LDFLAGS"
+CPPFLAGS="$save_CPPFLAGS"
+
+# Location of the HTML documentation
+AC_ARG_WITH([htmldir],
+	AC_HELP_STRING([--with-htmldir],
+		[Where to put the HTML documentation @<:@${datadir}/doc/${PACKAGE}/html@:>@]),
+	[htmldir=$withval],
+	[htmldir='${datadir}/doc/${PACKAGE}/html'])
+AC_SUBST([htmldir])
 
 # Configuration items
 AC_PREFIX_DEFAULT([/opt/glite])
@@ -86,5 +133,8 @@ AC_CONFIG_FILES([interface/Makefile])
 AC_CONFIG_FILES([src/Makefile])
 AC_CONFIG_FILES([src/c/Makefile])
 AC_CONFIG_FILES([src/utils/Makefile])
+AC_CONFIG_FILES([doc/Makefile])
+AC_CONFIG_FILES([doc/html/Makefile])
+AC_CONFIG_FILES([doc/man/Makefile])
 
 AC_OUTPUT

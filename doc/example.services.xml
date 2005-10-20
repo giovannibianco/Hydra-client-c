@@ -1,0 +1,14 @@
+<services>
+  <service name="io-client">
+    <parameters>
+      <endpoint>gliteio://grid.example.com:9999</endpoint>
+      <type>org.glite.GliteIO</type>
+      <version>2.2.0</version>
+      <site>cern.ch</site>
+      <param name="encryptname">true</param>
+      <param name="encryptdata">false</param>
+      <param name="streamnum">2</param>
+      <param name="cachelevel">6</param>
+    </parameters>
+  </service>
+</services>
