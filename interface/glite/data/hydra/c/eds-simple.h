@@ -27,7 +27,7 @@ extern "C" {
  * @param id The SURL or GUID of the remote file.
  * @param cipher The cipher name to use.
  * @param keysize Key size to use in bits.
- * @param [OUT] error Pointer to the error string.
+ * @param error [OUT] Pointer to the error string.
  *
  * @return 0 in case of no error. In other cases *error contains the error
  *  string. The caller is responsible for freeing the allocated error string.
@@ -43,7 +43,7 @@ int glite_eds_register(char *lfn, char *id, char *cipher, int keysize,
  * @param id The SURL or GUID of the remote file.
  * @param cipher The cipher name to use.
  * @param keysize Key size to use in bits.
- * @param [OUT] error Pointer to the error string.
+ * @param error [OUT] Pointer to the error string.
  *
  * @return Encryption context in case of no error. In other cases NULL is
  *  returned, and *error contains the error string. The caller is responsible
@@ -57,7 +57,7 @@ EVP_CIPHER_CTX *glite_eds_register_encrypt_init(char *lfn, char *id,
  * metadata catalog
  *
  * @param lfn The name of the remote file.
- * @param [OUT] error Pointer to the error string.
+ * @param error [OUT] Pointer to the error string.
  *
  * @return Encryption context in case of no error. In other cases NULL is
  *  returned, and *error contains the error string. The caller is responsible
@@ -70,7 +70,7 @@ EVP_CIPHER_CTX *glite_eds_encrypt_init(char *lfn, char **error);
  * metadata catalog
  *
  * @param lfn The name of the remote file.
- * @param [OUT] error Pointer to the error string.
+ * @param error [OUT] Pointer to the error string.
  *
  * @return Decryption context in case of no error. In other cases NULL is
  *  returned, and *error contains the error string. The caller is responsible
@@ -81,11 +81,12 @@ EVP_CIPHER_CTX *glite_eds_decrypt_init(char *lfn, char **error);
 /**
  * Encrypts a memory block using the encryption context
  * 
- * @param ctx Encryption context 
+ * @param ectx Encryption context 
  * @param mem_in Memory block to encrypt
  * @param mem_in_size Memory block size
- * @param [OUT] mem_out Encrypted memory block's address
- * @param [OUT] mem_out_size Encrypted memory block's size
+ * @param mem_out [OUT] Encrypted memory block's address
+ * @param mem_out_size [OUT] Encrypted memory block's size
+ * @param error [OUT] Pointer to the error string.
  *
  * @return 0 in case of there was no error. In other cases, *error contains
  *  the error string. The caller is responsible for freeing the allocated string
@@ -97,11 +98,10 @@ int glite_eds_encrypt_block(EVP_CIPHER_CTX *ectx, char *mem_in, int mem_in_size,
 /**
  * Finalizes memory block encryption
  * 
- * @param ctx Encryption context 
- * @param mem_in Memory block to encrypt
- * @param mem_in_size Memory block size
- * @param [OUT] mem_out Encrypted memory block's address
- * @param [OUT] mem_out_size Encrypted memory block's size
+ * @param ectx Encryption context 
+ * @param mem_out [OUT] Encrypted memory block's address
+ * @param mem_out_size [OUT] Encrypted memory block's size
+ * @param error [OUT] Pointer to the error string.
  *
  * @return 0 in case of there was no error. In other cases, *error contains
  *  the error string. The caller is responsible for freeing the allocated string
@@ -112,11 +112,12 @@ int glite_eds_encrypt_final(EVP_CIPHER_CTX *ectx, char **mem_out, int *mem_out_s
 /**
  * Decrypts a memory block using the encryption context
  * 
- * @param ctx Decryption context 
+ * @param dctx Decryption context 
  * @param mem_in Memory block to decrypt
  * @param mem_in_size Memory block size
- * @param [OUT] mem_out Decrypted memory block's address
- * @param [OUT] mem_out_size Decrypted memory block's size
+ * @param mem_out [OUT] Decrypted memory block's address
+ * @param mem_out_size [OUT] Decrypted memory block's size
+ * @param error [OUT] Pointer to the error string.
  *
  * @return 0 in case of there was no error. In other cases, *error contains
  *  the error string. The caller is responsible for freeing the allocated string
@@ -128,11 +129,10 @@ int glite_eds_decrypt_block(EVP_CIPHER_CTX *dctx, char *mem_in,  int mem_in_size
 /**
  * Finalizes memory block encryption
  * 
- * @param ctx Decryption context 
- * @param mem_in Memory block to decrypt
- * @param mem_in_size Memory block size
- * @param [OUT] mem_out Decrypted memory block's address
- * @param [OUT] mem_out_size Decrypted memory block's size
+ * @param dctx Decryption context 
+ * @param mem_out [OUT] Decrypted memory block's address
+ * @param mem_out_size [OUT] Decrypted memory block's size
+ * @param error [OUT] Pointer to the error string.
  *
  * @return 0 in case of there was no error. In other cases, *error contains
  *  the error string. The caller is responsible for freeing the allocated string
@@ -144,6 +144,7 @@ int glite_eds_decrypt_final(EVP_CIPHER_CTX *dctx, char **mem_out, int *mem_out_s
  * Finalize an encryption/decryption context
  *
  * @param ctx Encryption/decryption context
+ * @param error [OUT] Pointer to the error string.
  *
  * @return 0 in case of there was no error. In other cases, *error contains
  *  the error string. The caller is responsible for freeing the allocated string
@@ -155,6 +156,7 @@ int glite_eds_finalize(EVP_CIPHER_CTX *ctx, char **error);
  * Unregister catalog entries in case of error (key/iv)
  *
  * @param lfn The name of the remote file.
+ * @param error [OUT] Pointer to the error string.
  *
  * @return 0 in case of there was no error. In other cases, *error contains
  *  the error string. The caller is responsible for freeing the allocated string
