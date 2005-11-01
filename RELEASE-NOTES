@@ -2,6 +2,7 @@
 
     o Fixed #7540: man pages in the wrong place?
     o Document function parameters properly
+    o Document cipher parameters properly for CLI
     o Fixed slc build
 
 

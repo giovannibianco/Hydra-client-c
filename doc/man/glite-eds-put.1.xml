@@ -4,7 +4,7 @@
 <!ENTITY common-gliteio-env SYSTEM "common-gliteio-env.xml">
 ]>
 
-<refentry id="glite-eds-put.1" revision="$Revision: 1.1 $">
+<refentry id="glite-eds-put.1" revision="$Revision: 1.2 $">
 
 <refentryinfo>
     <!-- These information are shown on the manpage -->
@@ -50,6 +50,12 @@
 	</group>
 	<group>
 		<arg choice="plain"><option>-e</option></arg>
+	</group>
+	<group>
+		<arg choice="plain"><option>-c <replaceable>CIPHER</replaceable></option></arg>
+	</group>
+	<group>
+		<arg choice="plain"><option>-k <replaceable>KEYLENGTH</replaceable></option></arg>
 	</group>
 	<group>
 		<arg choice="plain"><option>-m <replaceable>MODE</replaceable></option></arg>
@@ -116,6 +122,33 @@
 	    </term>
 	    <listitem><para>
 	        Turn on data encryption.
+	    </para></listitem>
+	</varlistentry>
+
+	<varlistentry>
+	    <term>
+		<group choice="plain">
+		    <arg choice="plain"><option>-c <replaceable>CIPHER</replaceable></option></arg>
+		</group>
+	    </term>
+	    <listitem><para>
+	        Cipher name to use. 
+            See 'openssl list-cipher-commands' for the available options.
+            </para><para>
+            The current default is 'blowfish'.
+	    </para></listitem>
+	</varlistentry>
+	<varlistentry>
+	    <term>
+		<group choice="plain">
+		    <arg choice="plain"><option>-k <replaceable>KEYLENGTH</replaceable></option></arg>
+		</group>
+	    </term>
+	    <listitem><para>
+            Keylength to use in bits. 
+            See 'openssl list-cipher-commands' for the available options.
+            </para><para>
+            The current default is 128 bits.
 	    </para></listitem>
 	</varlistentry>
 
