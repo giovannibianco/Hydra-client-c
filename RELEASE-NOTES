@@ -1,3 +1,10 @@
+*** Release glite-data-hydra-cli_R_1_0_2 2005-11-01
+
+    o Fixed #7540: man pages in the wrong place?
+    o Document function parameters properly
+    o Fixed slc build
+
+
 *** Release glite-data-hydra-cli_R_1_0_1 2005-10-20
 
     o API: it is possible to specify key size
