@@ -7,6 +7,7 @@
  *
  *  Authors:
  *	Zoltan Farkas <Zoltan.Farkas@cern.ch>
+ *	Patrick Guio <patrick.guio@bccs.uib.no>
  *
  */
 
