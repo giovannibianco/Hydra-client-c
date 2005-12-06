@@ -4,7 +4,7 @@
 <!ENTITY common-gliteio-env SYSTEM "common-gliteio-env.xml">
 ]>
 
-<refentry id="glite-eds-rm.1" revision="$Revision: 1.1 $">
+<refentry id="glite-eds-rm.1" revision="$Revision: 1.2 $">
 
 <refentryinfo>
     <!-- These information are shown on the manpage -->
@@ -31,7 +31,7 @@
 <refnamediv>
     <refname>glite-eds-rm</refname>
     <refpurpose>
-        Removes a file using gLite I/O
+        Removes a file using gLite I/O and also remove the encryption keys from hydra.
     </refpurpose>
 </refnamediv>
 
@@ -49,6 +49,9 @@
 	        <arg choice="plain"><option>-v</option></arg>
 	</group>
 	<group>
+		<arg choice="plain"><option>-i <replaceable>ID</replaceable></option></arg>
+	</group>
+	<group>
 		<arg choice="plain"><option>-s <replaceable>SERVICE</replaceable></option></arg>
 	</group>
         <arg choice="plain"><option><replaceable>REMOTE_FILE</replaceable></option></arg>
@@ -60,7 +63,9 @@
     <title>DESCRIPTION</title>
     <para>
 	<command>glite-eds-rm</command> is a command-line tool for deleting a remote file from
-	a gLite I/O server.
+	a gLite I/O server. Also the encryption keys are removed from hydra. If you have other copies
+        lying around that are still encrypted, you will not be able to decrypt them anymore. Use the
+        standard <command>glite-rm</command> to remove single replicas.
     </para>
 </refsect1>
 
@@ -98,6 +103,17 @@
 	    </term>
 	    <listitem><para>
 	        Verbose operation.
+	    </para></listitem>
+	</varlistentry>
+
+	<varlistentry>
+	    <term>
+		<group choice="plain">
+		    <arg choice="plain"><option>-i <replaceable>ID</replaceable></option></arg>
+		</group>
+	    </term>
+	    <listitem><para>
+	        ID to be used to look up the encryption data with. Defaults to the file's GUID.
 	    </para></listitem>
 	</varlistentry>
 

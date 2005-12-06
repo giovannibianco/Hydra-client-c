@@ -40,11 +40,14 @@ using namespace log4cpp;
 void print_usage_and_die(FILE * out){
     fprintf (out, "\n");
     fprintf (out, "<%s> Version %s by %s\n", PROGNAME, PACKAGE_VERSION, PROGAUTHOR);
-    fprintf (out, "usage: %s <remotefilename> <localfilename>\n", PROGNAME);
+    fprintf (out, "usage: %s <remotefilename> <localfilename> [-i <id>]\n", PROGNAME);
+    fprintf(out, "  -i <id>        : the ID to use to look up the decryption key of this file "
+	    "(defaults to the remotefilename's GUID).\n");
     fprintf (out, " Optional parameters:\n");
-    fprintf (out, "  -v : verbose mode\n");
-    fprintf (out, "  -q : quiet mode\n");
-    fprintf (out, "  -h : print this screen\n");
+    fprintf (out, "  -v      : verbose mode\n");
+    fprintf (out, "  -q      : quiet mode\n");
+    fprintf (out, "  -s URL  : the IO server to talk to\n");
+    fprintf (out, "  -h      : print this screen\n");
     if(out == stdout){
         exit(0);
     }
@@ -60,10 +63,12 @@ int main(int argc, char* argv[])
     struct timeval abs_stop_time;
     struct timezone tz;
 
+    char *id = NULL;
+    char *service_endpoint = NULL;
     bool silent     = false;
 
     int flag;
-    while ((flag = getopt (argc, argv, "qhv")) != -1) {
+    while ((flag = getopt (argc, argv, "qhvs:i:")) != -1) {
         switch (flag) {
             case 'q':
                 silent = true;
@@ -72,6 +77,12 @@ int main(int argc, char* argv[])
             case 'h':
                 print_usage_and_die(stdout);
         	break;
+	    case 's':
+		service_endpoint = strdup(optarg);
+		break;
+	    case 'i':
+		id = strdup(optarg);
+		break;
 	    case 'v':
 		setenv(TOOL_USER_VERBOSE, "YES", 1);
 		silent = false;
@@ -88,7 +99,7 @@ int main(int argc, char* argv[])
 
     // Initialize the io client
     // -------------------------------------------------------------------------
-    int initres = glite_io_initialize(NULL, false);
+    int initres = glite_io_initialize(service_endpoint, false);
     if (initres < 0) {
         TRACE_ERR((stderr,"Cannot Initialize!\n"));
         return -1;
@@ -118,12 +129,38 @@ int main(int argc, char* argv[])
 	return -1;
     }
 
+    // Open remote file
+    // -------------------------------------------------------------------------
+    glite_result gl_res;
+    glite_handle fh = glite_open(remotefilename,O_RDONLY,0,0,&gl_res);
+    if (0 == fh) {
+        const char * error_msg = glite_strerror(gl_res);
+        TRACE_ERR((stderr,"Cannot Open Remote File %s. Error is \"%s (code: %d)\"\n",remotefilename,error_msg, gl_res));
+        return -1;
+    }
+
     // Initialize eds library
     // -------------------------------------------------------------------------
     char *error;
     EVP_CIPHER_CTX *dctx;
 
-    if (NULL == (dctx = glite_eds_decrypt_init(remotefilename, &error)))
+    if(NULL == id) {
+
+	struct glite_stat stat_buf;
+	glite_int32 result = glite_fstat(fh, &stat_buf);
+	if(0 != result)
+	    {
+		const char * error_msg = glite_strerror(result);
+		TRACE_ERR((stderr, "Cannot Get Remote File Stat. Error is \"%s (code: "
+			   "%d)\"\n",error_msg, result));
+		glite_close(fh);
+		return -1;
+	    } 
+
+	id = stat_buf.guid;
+    }
+
+    if (NULL == (dctx = glite_eds_decrypt_init(id, &error)))
     {
 	TRACE_ERR((stderr, "Error during glite_eds_decrypt_init: %s\n",
 	    error));
@@ -134,16 +171,6 @@ int main(int argc, char* argv[])
     // Start Time    
     // -------------------------------------------------------------------------
     gettimeofday(&abs_start_time,&tz);
-
-    // Open remote file
-    // -------------------------------------------------------------------------
-    glite_result gl_res;
-    glite_handle fh = glite_open(remotefilename,O_RDONLY,0,0,&gl_res);
-    if (0 == fh) {
-        const char * error_msg = glite_strerror(gl_res);
-        TRACE_ERR((stderr,"Cannot Open Remote File %s. Error is \"%s (code: %d)\"\n",remotefilename,error_msg, gl_res));
-        return -1;
-    }
 
     // Get The Logger
     // -------------------------------------------------------------------------
@@ -247,12 +274,6 @@ int main(int argc, char* argv[])
 	TRACE_ERR((stderr, "Error during glite_eds_encrypt_final: %s\n",
 		   error));
 	free(error);
-	if (glite_eds_unregister(remotefilename, &error))
-	  {
-	    TRACE_ERR((stderr, "Error during glite_eds_unregister: %s\n",
-		       error));
-	    free(error);
-	  }
         close(fdump);
         glite_close(fh);
 	return -1;

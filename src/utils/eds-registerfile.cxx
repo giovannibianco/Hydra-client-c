@@ -29,13 +29,20 @@
 void print_usage_and_die(FILE * out){
     fprintf(out, "\n");
     fprintf(out, "<%s> Version %s by %s\n", PROGNAME, PACKAGE_VERSION, PROGAUTHOR);
-    fprintf(out, "usage: %s <localfilename> <remotefilename> <SURL/GUID> <outfilename>\n", PROGNAME);
-    fprintf(out, " Optional parameters:\n");
-    fprintf(out, "  -v : verbose mode\n");
-    fprintf(out, "  -q : quiet mode\n");
-    fprintf(out, "  -c : cipher name to use\n");
-    fprintf(out, "  -k : key size to use in bits\n");
-    fprintf(out, "  -h : print this screen\n");
+    fprintf(out, "usage: %s <localfilename> <remotefilename> <ID> <outfilename>\n", PROGNAME);
+    fprintf(out, " ");
+    fprintf(out, " Register the keys into hydra, while providing an encrypted version locally. \n");
+    fprintf(out, " This command does not call the glite-io server. \n\n");
+    fprintf(out, " localfilename : The local path to the file to be put \n");
+    fprintf(out, " remotefilename: The remote (lfn) path of the file write \n");
+    fprintf(out, " ID            : The ID by which the keys are stored in the hydra catalog\n");
+    fprintf(out, " outfilename   : The local path to the encrypted file \n");
+    fprintf(out, " Optional flags:\n");
+    fprintf(out, "  -v      : verbose mode\n");
+    fprintf(out, "  -q      : quiet mode\n");
+    fprintf(out, "  -c name : cipher name to use\n");
+    fprintf(out, "  -k n    : key size to use in bits\n");
+    fprintf(out, "  -h      : print this screen\n");
     if(out == stdout){
         exit(0);
     }
@@ -99,13 +106,13 @@ int main(int argc, char **argv)
 	TRACE_ERR((stderr,"Cannot Open Local Output File %s. Error is \"%s (code: %d)\"\n", out, error_msg, errno));
 	return -1;
     }
-    
+
     // Initialize eds library
     // -------------------------------------------------------------------------
     char *error;
     EVP_CIPHER_CTX *ectx;
     
-    if (NULL == (ectx = glite_eds_register_encrypt_init(remote, id,
+    if (NULL == (ectx = glite_eds_register_encrypt_init(id,
 							cipher, key_size, &error)))
     {
 	TRACE_ERR((stderr, "Error during glite_eds_register_encrypt_init: %s\n",

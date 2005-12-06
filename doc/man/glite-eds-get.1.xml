@@ -4,7 +4,7 @@
 <!ENTITY common-gliteio-env SYSTEM "common-gliteio-env.xml">
 ]>
 
-<refentry id="glite-eds-get.1" revision="$Revision: 1.1 $">
+<refentry id="glite-eds-get.1" revision="$Revision: 1.2 $">
 
 <refentryinfo>
     <!-- These information are shown on the manpage -->
@@ -12,7 +12,11 @@
 	<firstname>Zoltan</firstname>
 	<surname>Farkas</surname>
     </author>
-    <date>March 2005</date>
+    <author>
+	<firstname>Peter</firstname>
+	<surname>Kunszt</surname>
+    </author>
+    <date>November 2005</date>
     <productname>GLite</productname>
     <title>gLite Data Management</title>
 
@@ -49,13 +53,10 @@
 	        <arg choice="plain"><option>-v</option></arg>
 	</group>
 	<group>
-		<arg choice="plain"><option>-e</option></arg>
-	</group>
-	<group>
-		<arg choice="plain"><option>-m <replaceable>MODE</replaceable></option></arg>
-	</group>
-	<group>
 		<arg choice="plain"><option>-s <replaceable>SERVICE</replaceable></option></arg>
+	</group>
+	<group>
+		<arg choice="plain"><option>-i <replaceable>ID</replaceable></option></arg>
 	</group>
         <arg choice="plain"><option><replaceable>REMOTE_FILE</replaceable></option></arg>
         <arg choice="plain"><option><replaceable>LOCAL_FILE</replaceable></option></arg>
@@ -67,7 +68,9 @@
     <title>DESCRIPTION</title>
     <para>
 	<command>glite-eds-get</command> is a command-line tool for transferring a remote file from
-	a gLite I/O server to the local filesystem.
+	a gLite I/O server to the local filesystem. It is assumed that the file is encrypted on the storage.
+        <command>glite-eds-get</command> will look up the key needed for decryption in the hydra catalog,
+        retrieve it and decrypt the file. The local file will be decrypted.
     </para>
 </refsect1>
 
@@ -108,25 +111,14 @@
 	    </para></listitem>
 	</varlistentry>
 
-        <varlistentry>
-	    <term>
-		<group choice="plain">
-		    <arg choice="plain"><option>-e</option></arg>
-		</group>
-	    </term>
-	    <listitem><para>
-	        Turn on data encryption.
-	    </para></listitem>
-	</varlistentry>
-
 	<varlistentry>
 	    <term>
 		<group choice="plain">
-		    <arg choice="plain"><option>-m <replaceable>MODE</replaceable></option></arg>
+		    <arg choice="plain"><option>-i <replaceable>ID</replaceable></option></arg>
 		</group>
 	    </term>
 	    <listitem><para>
-	        Mode of created file on the local side.
+	        The ID to use to look up the encryption key in hydra. This defaults to the remote file's GUID.
 	    </para></listitem>
 	</varlistentry>
 

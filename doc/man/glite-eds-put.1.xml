@@ -4,7 +4,7 @@
 <!ENTITY common-gliteio-env SYSTEM "common-gliteio-env.xml">
 ]>
 
-<refentry id="glite-eds-put.1" revision="$Revision: 1.2 $">
+<refentry id="glite-eds-put.1" revision="$Revision: 1.3 $">
 
 <refentryinfo>
     <!-- These information are shown on the manpage -->
@@ -12,7 +12,11 @@
 	<firstname>Zoltan</firstname>
 	<surname>Farkas</surname>
     </author>
-    <date>March 2005</date>
+    <author>
+	<firstname>Peter</firstname>
+	<surname>Kunszt</surname>
+    </author>
+    <date>November 2005</date>
     <productname>GLite</productname>
     <title>gLite Data Management</title>
 
@@ -31,7 +35,7 @@
 <refnamediv>
     <refname>glite-eds-put</refname>
     <refpurpose>
-        Puts a file using gLite I/O
+        Puts a file using gLite I/O, encrypting it in the process. The encryption keys are stored in the hydra catalog.
     </refpurpose>
 </refnamediv>
 
@@ -49,16 +53,13 @@
 	        <arg choice="plain"><option>-v</option></arg>
 	</group>
 	<group>
-		<arg choice="plain"><option>-e</option></arg>
-	</group>
-	<group>
 		<arg choice="plain"><option>-c <replaceable>CIPHER</replaceable></option></arg>
 	</group>
 	<group>
 		<arg choice="plain"><option>-k <replaceable>KEYLENGTH</replaceable></option></arg>
 	</group>
 	<group>
-		<arg choice="plain"><option>-m <replaceable>MODE</replaceable></option></arg>
+		<arg choice="plain"><option>-i <replaceable>ID</replaceable></option></arg>
 	</group>
 	<group>
 		<arg choice="plain"><option>-s <replaceable>SERVICE</replaceable></option></arg>
@@ -73,7 +74,10 @@
     <title>DESCRIPTION</title>
     <para>
 	<command>glite-eds-put</command> is a command-line tool for transferring a local file to
-	a remote gLite I/O server.
+	a remote gLite I/O server. The file will be stored encrypted on the remote side. The encryption
+        keys are generated on the client, and stored in the hydra service. If the file is retrieved normally
+        through a simple <command>glite-get</command>, the file will be in encrypted form and thus not usable
+        without the keys.
     </para>
 </refsect1>
 
@@ -114,17 +118,6 @@
 	    </para></listitem>
 	</varlistentry>
 
-        <varlistentry>
-	    <term>
-		<group choice="plain">
-		    <arg choice="plain"><option>-e</option></arg>
-		</group>
-	    </term>
-	    <listitem><para>
-	        Turn on data encryption.
-	    </para></listitem>
-	</varlistentry>
-
 	<varlistentry>
 	    <term>
 		<group choice="plain">
@@ -155,11 +148,11 @@
 	<varlistentry>
 	    <term>
 		<group choice="plain">
-		    <arg choice="plain"><option>-m <replaceable>MODE</replaceable></option></arg>
+		    <arg choice="plain"><option>-i <replaceable>ID</replaceable></option></arg>
 		</group>
 	    </term>
 	    <listitem><para>
-	        Mode of created file on the remote side.
+	        ID to be used to store the encryption data with. Defaults to the file's GUID.
 	    </para></listitem>
 	</varlistentry>
 
@@ -187,7 +180,7 @@
         <varlistentry>
 	    <term><option><replaceable>REMOTE_FILE</replaceable></option></term>
 	    <listitem><para>
-	        The name of the remote file.
+	        The name of the remote file. (Logical file name).
 	    </para></listitem>
 	</varlistentry>
     </variablelist>

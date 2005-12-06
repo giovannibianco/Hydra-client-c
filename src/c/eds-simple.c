@@ -12,11 +12,12 @@
  */
 
 #include <string.h>
+#include <stdio.h>
 #include <openssl/evp.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>
 #include <glite/data/hydra/c/eds-simple.h>
-#include <glite/data/catalog/fireman/c/fireman-simple.h>
+//#include <glite/data/catalog/fireman/c/fireman-simple.h>
 #include <glite/data/catalog/metadata/c/metadata-simple.h>
 
 
@@ -29,12 +30,15 @@
 /* Default cipher */
 #define EDS_DEFAULT_CIPHER "bf-cbc"
 
+EVP_CIPHER_CTX *glite_eds_init(char *id, char **key, char **iv,
+			       const EVP_CIPHER **type, char **error);
+
 
 /**
  * Helper function - check the value of an attribute. If not present,
  * return the default value
  */
-char *get_attr_value(glite_catalog_Attribute **attrs, int attrnum,
+static char *get_attr_value(glite_catalog_Attribute **attrs, int attrnum,
     const char *name, const char *def_val)
 {
     int i;
@@ -59,7 +63,7 @@ char *get_attr_value(glite_catalog_Attribute **attrs, int attrnum,
  * Helper function - convert binary data to hexadecimal format, return is out
  * size or -1 in case of memory allocation error
  */
-int to_hex(unsigned char *in, int insize, unsigned char **out)
+static int to_hex(unsigned char *in, int insize, unsigned char **out)
 {
     int i, ret = -1;
     const char hex[] = "0123456789ABCDEF";
@@ -84,7 +88,7 @@ int to_hex(unsigned char *in, int insize, unsigned char **out)
  * Helper function - convert a hexadecimal string to binary data, return is
  * out size or -1 in case of memory allocation error
  */
-int to_bin(unsigned char *in, unsigned char **out)
+static int to_bin(unsigned char *in, unsigned char **out)
 {
     int i, ret = -1;
     const char hex[] = "0123456789ABCDEF";
@@ -111,7 +115,7 @@ int to_bin(unsigned char *in, unsigned char **out)
 /**
  * Helper function - register datas in the metadata catalog
  */
-int glite_eds_put_metadata(char *lfn, char *hex_key, char *hex_iv, char *cipher,
+int glite_eds_put_metadata(char *id, char *hex_key, char *hex_iv, char *cipher,
     char *keyinfo, char **error)
 {
     glite_catalog_ctx *ctx;
@@ -130,7 +134,7 @@ int glite_eds_put_metadata(char *lfn, char *hex_key, char *hex_iv, char *cipher,
 	asprintf(error, "glite_eds_put_metadata error: %s", catalog_err);
 	return -1;
     }
-    if (glite_metadata_createEntry(ctx, lfn, "eds"))
+    if (glite_metadata_createEntry(ctx, id, "eds"))
     {
 	const char *catalog_err;
 	catalog_err = glite_catalog_get_error(ctx);
@@ -138,7 +142,7 @@ int glite_eds_put_metadata(char *lfn, char *hex_key, char *hex_iv, char *cipher,
 	asprintf(error, "glite_eds_put_metadata error: %s", catalog_err);
 	return -1;
     }
-    if (glite_metadata_setAttributes(ctx, lfn, 4, attrs))
+    if (glite_metadata_setAttributes(ctx, id, 4, attrs))
     {
 	const char *catalog_err;
 	catalog_err = glite_catalog_get_error(ctx);
@@ -148,70 +152,13 @@ int glite_eds_put_metadata(char *lfn, char *hex_key, char *hex_iv, char *cipher,
     }
     glite_catalog_free(ctx);
 
-    return 0;
-}
-
-/**
- * Helper function - register a new file in fireman catalog
- */
-int glite_eds_put_fireman(char *lfn, char *id, char **error)
-{
-    const char *SURL_prefix = "srm://";
-    glite_catalog_ctx *ctx;
- 
-    if (NULL == (ctx = glite_catalog_new(NULL)))
-    {
-	const char *catalog_err;
-	catalog_err = glite_catalog_get_error(ctx);
-
-	asprintf(error, "glite_eds_put_fireman error: %s", catalog_err);
-	return -1;
-    }
-
-    if (!strncmp(id, SURL_prefix, strlen(SURL_prefix)))
-    {
-	glite_catalog_SURLEntry *surl_entry;
-	glite_catalog_FRCEntry *rentry;
-	
-	surl_entry = glite_catalog_SURLEntry_new(NULL, id, 1);
-	rentry = glite_catalog_FRCEntry_new(ctx, lfn);
-	glite_catalog_FRCEntry_addSurl(ctx, rentry, surl_entry);
-	
-	if (glite_fireman_create(ctx, rentry))
-	{
-	    const char *catalog_err;
-	    catalog_err = glite_catalog_get_error(ctx);
-	    
-	    asprintf(error, "glite_eds_put_fireman error: %s", catalog_err);
-	    return -1;
-	}
-    }
-    else
-    {
- 	glite_catalog_FRCEntry *entry;
-	
-	entry = glite_catalog_FRCEntry_new(ctx, lfn);
-	glite_catalog_FRCEntry_setGuid(ctx, entry, id);
-
- 	if (glite_fireman_create(ctx, entry))
-	{
-	    const char *catalog_err;
-	    catalog_err = glite_catalog_get_error(ctx);
-	    
-	    asprintf(error, "glite_eds_put_fireman error: %s", catalog_err);
-	    return -1;
-	}
-    }
-
-    glite_catalog_free(ctx);
-    
     return 0;
 }
 
 /**
  * Helper funcition - used by glite_eds_encrypt_init and glite_eds_decrypt_init
  */
-EVP_CIPHER_CTX *glite_eds_init(char *lfn, char **key, char **iv,
+EVP_CIPHER_CTX *glite_eds_init(char *id, char **key, char **iv,
     const EVP_CIPHER **type, char **error)
 {
     int result_cnt;
@@ -231,7 +178,7 @@ EVP_CIPHER_CTX *glite_eds_init(char *lfn, char **key, char **iv,
 	return NULL;
     }
 
-    result = glite_metadata_getAttributes(ctx, lfn, 4, attrs, &result_cnt);
+    result = glite_metadata_getAttributes(ctx, id, 4, attrs, &result_cnt);
     if (result_cnt < 0)
     {
 	const char *catalog_err;
@@ -306,7 +253,7 @@ EVP_CIPHER_CTX *glite_eds_init(char *lfn, char **key, char **iv,
 /**
  * Register a new file in Hydra: create metadata entries (key/iv/...)
  */
-int glite_eds_register(char *lfn, char *id, char *cipher, int keysize,
+int glite_eds_register(char *id, char *cipher, int keysize,
     char **error)
 {
     char *key, *iv, *cipher_to_use, *hex_key, *hex_iv, *keyl_str;
@@ -361,12 +308,12 @@ int glite_eds_register(char *lfn, char *id, char *cipher, int keysize,
 
     /* Do the Metadata Catalog stuff */
     asprintf(&keyl_str, "%d", keyLength<<3);
-    if (glite_eds_put_metadata(lfn, hex_key, hex_iv, cipher_to_use, keyl_str, error))
+    if (glite_eds_put_metadata(id, hex_key, hex_iv, cipher_to_use, keyl_str, error))
     {
 	return -1;
     }
 
-    /* If id (SURL/GUID) is present, create Fireman Catalog entry */
+    /* If id (SURL/GUID) is present, create Fireman Catalog entry
     if (id)
     {
         if (glite_eds_put_fireman(lfn, id, error))
@@ -374,7 +321,7 @@ int glite_eds_register(char *lfn, char *id, char *cipher, int keysize,
 	    return -1;
 	}
     }
-
+    */
 
     free(iv); free(hex_iv); free(key); free(hex_key); free(keyl_str);
     
@@ -385,7 +332,7 @@ int glite_eds_register(char *lfn, char *id, char *cipher, int keysize,
  * Register a new file in Hydra: create metadata entries (key/iv/...),
  * initalizes encryption context
  */
-EVP_CIPHER_CTX *glite_eds_register_encrypt_init(char *lfn, char *id,
+EVP_CIPHER_CTX *glite_eds_register_encrypt_init(char *id,
     char *cipher, int keysize, char **error)
 {
     char *key, *hex_key, *iv, *hex_iv, *cipher_to_use, *keyl_str;
@@ -439,7 +386,7 @@ EVP_CIPHER_CTX *glite_eds_register_encrypt_init(char *lfn, char *id,
 
     if (keyLength * 2 != to_hex(key, keyLength, (unsigned char **)&hex_key))
     {
-        asprintf(error, "glite_eds_register error: converting key to hex "
+        asprintf(error, "glite_eds_register_encrypt_init error: converting key to hex "
 	    "format failed");
 	free(ectx);
 	return NULL;
@@ -447,7 +394,7 @@ EVP_CIPHER_CTX *glite_eds_register_encrypt_init(char *lfn, char *id,
     RAND_pseudo_bytes((char *)iv, ivLength);
     if (ivLength * 2 != to_hex(iv, ivLength, (unsigned char **)&hex_iv))
     {
-        asprintf(error, "glite_eds_register error: converting iv to hex "
+        asprintf(error, "glite_eds_register_encrypt_init error: converting iv to hex "
 	    "format failed");
 	free(ectx);
 	return NULL;
@@ -457,22 +404,12 @@ EVP_CIPHER_CTX *glite_eds_register_encrypt_init(char *lfn, char *id,
 
     /* Do the Metadata Catalog stuff */
     asprintf(&keyl_str, "%d", keyLength << 3);
-    if (glite_eds_put_metadata(lfn, hex_key, hex_iv, cipher_to_use, keyl_str, error))
+    if (glite_eds_put_metadata(id, hex_key, hex_iv, cipher_to_use, keyl_str, error))
     {
         free(ectx);
 	return NULL;
     }
     free(keyl_str);
-
-    /* If id (SURL/GUID) is present, create Fireman Catalog entry */
-    if (id)
-    {
-        if (glite_eds_put_fireman(lfn, id, error))
-	{
-	    free(ectx);
-	    return NULL;
-	}
-    }
 
     return ectx;
 }
@@ -481,13 +418,13 @@ EVP_CIPHER_CTX *glite_eds_register_encrypt_init(char *lfn, char *id,
  * Initialize encryption context for a file. Query key/iv pairs from
  * metadata catalog
  */
-EVP_CIPHER_CTX *glite_eds_encrypt_init(char *lfn, char **error)
+EVP_CIPHER_CTX *glite_eds_encrypt_init(char *id, char **error)
 {
     char *iv, *key;
     const EVP_CIPHER *type;
     EVP_CIPHER_CTX *ectx;
     
-    if (NULL == (ectx = glite_eds_init(lfn, &key, &iv, &type, error)))
+    if (NULL == (ectx = glite_eds_init(id, &key, &iv, &type, error)))
     {
 	return NULL;
     }
@@ -502,13 +439,13 @@ EVP_CIPHER_CTX *glite_eds_encrypt_init(char *lfn, char **error)
  * Initialize decryption context for a file. Query key/iv pairs from
  * metadata catalog
  */
-EVP_CIPHER_CTX *glite_eds_decrypt_init(char *lfn, char **error)
+EVP_CIPHER_CTX *glite_eds_decrypt_init(char *id, char **error)
 {
     char *iv, *key;
     const EVP_CIPHER *type;
     EVP_CIPHER_CTX *dctx;
     
-    if (NULL == (dctx = glite_eds_init(lfn, &key, &iv, &type, error)))
+    if (NULL == (dctx = glite_eds_init(id, &key, &iv, &type, error)))
     {
 	return NULL;
     }
@@ -525,7 +462,7 @@ EVP_CIPHER_CTX *glite_eds_decrypt_init(char *lfn, char **error)
 int glite_eds_encrypt_block(EVP_CIPHER_CTX *ectx, char *mem_in, int mem_in_size,
     char **mem_out, int *mem_out_size, char **error)
 {
-    int enc_buffer_size, trial;
+    int enc_buffer_size;
     char *enc_buffer;
 
     enc_buffer = (char *)malloc(mem_in_size + EVP_CIPHER_CTX_block_size(ectx));
@@ -550,7 +487,7 @@ int glite_eds_encrypt_block(EVP_CIPHER_CTX *ectx, char *mem_in, int mem_in_size,
  */
 int glite_eds_encrypt_final(EVP_CIPHER_CTX *ectx, char **mem_out, int *mem_out_size, char **error)
 {
-    int enc_buffer_size, trial;
+    int enc_buffer_size;
     char *enc_buffer;
 
     enc_buffer = (char *)malloc(EVP_CIPHER_CTX_block_size(ectx));
@@ -575,7 +512,7 @@ int glite_eds_encrypt_final(EVP_CIPHER_CTX *ectx, char **mem_out, int *mem_out_s
 int glite_eds_decrypt_block(EVP_CIPHER_CTX *dctx, char *mem_in,  int mem_in_size,
     char **mem_out, int *mem_out_size, char **error)
 {
-    int dec_buffer_size, trial;
+    int dec_buffer_size;
     char *dec_buffer;
 
     dec_buffer = (char *)malloc(mem_in_size + EVP_CIPHER_CTX_block_size(dctx));
@@ -631,7 +568,7 @@ int glite_eds_finalize(EVP_CIPHER_CTX *ctx, char **error)
 /**
  * Unregister catalog entries in case of error (key/iv)
  */
-int glite_eds_unregister(char *lfn, char **error)
+int glite_eds_unregister(char *id, char **error)
 {
     glite_catalog_ctx *ctx;
     if (NULL == (ctx = glite_catalog_new(NULL)))
@@ -643,7 +580,7 @@ int glite_eds_unregister(char *lfn, char **error)
 	return -1;
     }
 
-    if (glite_metadata_removeEntry(ctx, lfn))
+    if (glite_metadata_removeEntry(ctx, id))
     {
 	const char *catalog_err;
 	catalog_err = glite_catalog_get_error(ctx);
@@ -654,3 +591,68 @@ int glite_eds_unregister(char *lfn, char **error)
 
     return 0;
 }
+
+
+
+/***************
+
+
+ * Helper function - register a new file in fireman catalog
+
+
+int glite_eds_put_fireman(char *lfn, char *id, char **error)
+{
+    const char *SURL_prefix = "srm://";
+    glite_catalog_ctx *ctx;
+ 
+    if (NULL == (ctx = glite_catalog_new(NULL)))
+    {
+	const char *catalog_err;
+	catalog_err = glite_catalog_get_error(ctx);
+
+	asprintf(error, "glite_eds_put_fireman error: %s", catalog_err);
+	return -1;
+    }
+
+    if (!strncmp(id, SURL_prefix, strlen(SURL_prefix)))
+    {
+	glite_catalog_SURLEntry *surl_entry;
+	glite_catalog_FRCEntry *rentry;
+	
+	surl_entry = glite_catalog_SURLEntry_new(NULL, id, 1);
+	rentry = glite_catalog_FRCEntry_new(ctx, lfn);
+	glite_catalog_FRCEntry_addSurl(ctx, rentry, surl_entry);
+	
+	if (glite_fireman_create(ctx, rentry))
+	{
+	    const char *catalog_err;
+	    catalog_err = glite_catalog_get_error(ctx);
+	    
+	    asprintf(error, "glite_eds_put_fireman error: %s", catalog_err);
+	    return -1;
+	}
+    }
+    else
+    {
+ 	glite_catalog_FRCEntry *entry;
+	
+	entry = glite_catalog_FRCEntry_new(ctx, lfn);
+	glite_catalog_FRCEntry_setGuid(ctx, entry, id);
+
+ 	if (glite_fireman_create(ctx, entry))
+	{
+	    const char *catalog_err;
+	    catalog_err = glite_catalog_get_error(ctx);
+	    
+	    asprintf(error, "glite_eds_put_fireman error: %s", catalog_err);
+	    return -1;
+	}
+    }
+
+    glite_catalog_free(ctx);
+    
+    return 0;
+}
+
+*/
+

@@ -7,6 +7,7 @@
  *
  *  Authors:
  *	Zoltan Farkas <Zoltan.Farkas@cern.ch>
+ *	Peter Kunszt <Peter.Kunszt@cern.ch>
  *
  */
 
@@ -23,7 +24,6 @@ extern "C" {
 /**
  * Register a new file in Hydra: create metadata entries (key/iv/...)
  * 
- * @param lfn The name of the remote file.
  * @param id The SURL or GUID of the remote file.
  * @param cipher The cipher name to use.
  * @param keysize Key size to use in bits.
@@ -32,15 +32,14 @@ extern "C" {
  * @return 0 in case of no error. In other cases *error contains the error
  *  string. The caller is responsible for freeing the allocated error string.
  */
-int glite_eds_register(char *lfn, char *id, char *cipher, int keysize,
+int glite_eds_register(char *id, char *cipher, int keysize,
     char **error);
 
 /**
  * Register a new file in Hydra: create metadata entries (key/iv/...),
  * initalizes encryption context
  * 
- * @param lfn The name of the remote file.
- * @param id The SURL or GUID of the remote file.
+ * @param id The ID by which the crypt will be registered (remote file name or GUID).
  * @param cipher The cipher name to use.
  * @param keysize Key size to use in bits.
  * @param error [OUT] Pointer to the error string.
@@ -49,34 +48,34 @@ int glite_eds_register(char *lfn, char *id, char *cipher, int keysize,
  *  returned, and *error contains the error string. The caller is responsible
  *  for freeing the allocated error string.
  */
-EVP_CIPHER_CTX *glite_eds_register_encrypt_init(char *lfn, char *id,
+EVP_CIPHER_CTX *glite_eds_register_encrypt_init(char *id,
     char *cipher, int keysize, char **error);
 
 /**
  * Initialize encryption context for a file. Query key/iv/... from
  * metadata catalog
  *
- * @param lfn The name of the remote file.
+ * @param id The ID by which the crypt key is stored (remote file name or GUID)
  * @param error [OUT] Pointer to the error string.
  *
  * @return Encryption context in case of no error. In other cases NULL is
  *  returned, and *error contains the error string. The caller is responsible
  *  for freeing the allocated error string.
  */
-EVP_CIPHER_CTX *glite_eds_encrypt_init(char *lfn, char **error); 
+EVP_CIPHER_CTX *glite_eds_encrypt_init(char *id, char **error); 
 
 /**
  * Initialize decryption context for a file. Query key/iv/... from
  * metadata catalog
  *
- * @param lfn The name of the remote file.
+ * @param id The ID by which the crypt key is stored (remote file name or GUID).
  * @param error [OUT] Pointer to the error string.
  *
  * @return Decryption context in case of no error. In other cases NULL is
  *  returned, and *error contains the error string. The caller is responsible
  *  for freeing the allocated error string.
  */
-EVP_CIPHER_CTX *glite_eds_decrypt_init(char *lfn, char **error); 
+EVP_CIPHER_CTX *glite_eds_decrypt_init(char *id, char **error); 
 
 /**
  * Encrypts a memory block using the encryption context
@@ -155,14 +154,14 @@ int glite_eds_finalize(EVP_CIPHER_CTX *ctx, char **error);
 /**
  * Unregister catalog entries in case of error (key/iv)
  *
- * @param lfn The name of the remote file.
+ * @param id The ID by which the crypt key is stored (remote file name or GUID).
  * @param error [OUT] Pointer to the error string.
  *
  * @return 0 in case of there was no error. In other cases, *error contains
  *  the error string. The caller is responsible for freeing the allocated string
  *  and the returned memory block in case of success
  */
-int glite_eds_unregister(char *lfn, char **error);
+int glite_eds_unregister(char *id, char **error);
 
 
 #ifdef __cplusplus
