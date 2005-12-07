@@ -52,6 +52,8 @@ void print_usage_and_die(FILE * out){
     fprintf(out, "  -s URL  : the IO server to talk to\n");
     fprintf(out, "  -c name : cipher name to use\n");
     fprintf(out, "  -k n    : key size to use in bits\n");
+    fprintf(out, "  -u      : don't actually encrypt the data, just do the key gen/registration\n");
+    fprintf(out, "            this is useful for some special setups where the SE crypts by itself\n");
     fprintf(out, "  -h      : print this screen\n");
     if (out == stdout) {
 	exit(0);
@@ -63,7 +65,7 @@ int main(int argc, char **argv)
 {
     int flag, key_size = 0, mode = 0640;
     char *in, *remote, *out, *cipher = NULL;
-    bool silent = false, progbar = false;
+    bool silent = false, progbar = false, reg_only = false;
     char localfilename[GLITE_LFN_LENGTH];
     char remotefilename[GLITE_LFN_LENGTH + 7];
     
@@ -73,13 +75,17 @@ int main(int argc, char **argv)
     char *service_endpoint = NULL;
     char *id = NULL;
 
-    while ((flag = getopt (argc, argv, "m:qhvc:k:s:i:")) != -1) {
+    while ((flag = getopt (argc, argv, "m:qhvcu:k:s:i:")) != -1) {
         switch (flag) {
             case 'm':
                 sscanf(optarg,"%o",&mode);
         	break;
             case 'q':
                 silent = true;
+		unsetenv(TOOL_USER_VERBOSE);
+        	break;
+            case 'u':
+                reg_only = true;
 		unsetenv(TOOL_USER_VERBOSE);
         	break;
             case 'h':
@@ -262,48 +268,64 @@ int main(int argc, char **argv)
 	    glite_unlink(remotefilename);
             return -1;
         }
-	
-	int enc_buffer_size;
-	char *enc_buffer;
-	if (glite_eds_encrypt_block(ectx, buffer, nread, &enc_buffer, 
-				    &enc_buffer_size, &error))
-	{
-	    TRACE_ERR((stderr, "Error during glite_eds_encrypt_block: %s\n",
-		       error));
-	    free(error);
-	    if (glite_eds_unregister(id, &error))
-	    {
-    		TRACE_ERR((stderr, "Error during glite_eds_unregister: %s\n",
-			   error));
-		free(error);
+
+	if(reg_only) {  // don't actually do the encryption
+
+	    int nwrite = glite_write(fh, buffer, nread);
+	    if (nwrite != nread) {
+		const char * error_msg = glite_strerror(nwrite);
+		TRACE_ERR((stderr,"\nFatal error during remote write. Error is \"%s (code: %d)\"\n",error_msg, nwrite));
+		TRACE_ERR((stderr,"Transfer Finished after %d/%d bytes!\n",bytesread,size));
+		close(fdump);
+		glite_close(fh);
+		return -1;
 	    }
-            close(fdump);
-            glite_close(fh);
-	    glite_unlink(remotefilename);
-	    return -1;
-	}
+	    bytesread += nread;
+
+
+	} else {        // do do the encryption
+	    int enc_buffer_size;
+	    char *enc_buffer;
+	    if (glite_eds_encrypt_block(ectx, buffer, nread, &enc_buffer, 
+					&enc_buffer_size, &error))
+		{
+		    TRACE_ERR((stderr, "Error during glite_eds_encrypt_block: %s\n",
+			       error));
+		    free(error);
+		    if (glite_eds_unregister(id, &error))
+			{
+			    TRACE_ERR((stderr, "Error during glite_eds_unregister: %s\n",
+				       error));
+			    free(error);
+			}
+		    close(fdump);
+		    glite_close(fh);
+		    glite_unlink(remotefilename);
+		    return -1;
+		}
         
-        int nwrite = glite_write(fh, enc_buffer, enc_buffer_size);
-	free(enc_buffer);
-        if (nwrite != enc_buffer_size) {
-            const char * error_msg = glite_strerror(nwrite);
-            TRACE_ERR((stderr, "\nFatal error during remote write. Error is "
-		       "\"%s (code: %d)\"\n",error_msg, nwrite));
-            TRACE_ERR((stderr,"Transfer Finished after %d/%d bytes!\n",
-		       bytesread, size));
-	    if (glite_eds_unregister(id, &error))
-	    {
-    		TRACE_ERR((stderr, "Error during glite_eds_unregister: %s\n",
-			   error));
-		free(error);
+	    int nwrite = glite_write(fh, enc_buffer, enc_buffer_size);
+	    free(enc_buffer);
+	    if (nwrite != enc_buffer_size) {
+		const char * error_msg = glite_strerror(nwrite);
+		TRACE_ERR((stderr, "\nFatal error during remote write. Error is "
+			   "\"%s (code: %d)\"\n",error_msg, nwrite));
+		TRACE_ERR((stderr,"Transfer Finished after %d/%d bytes!\n",
+			   bytesread, size));
+		if (glite_eds_unregister(id, &error))
+		    {
+			TRACE_ERR((stderr, "Error during glite_eds_unregister: %s\n",
+				   error));
+			free(error);
+		    }
+		close(fdump);
+		glite_close(fh);
+		glite_unlink(remotefilename);
+		return -1;
 	    }
-            close(fdump);
-            glite_close(fh);
-	    glite_unlink(remotefilename);
-            return -1;
-        }
-        bytesread += nread;
-	
+	    bytesread += nread;
+	}
+
         // Print Progress Bar
         // ---------------------------------------------------------------------
         if(!silent) {
@@ -333,30 +355,34 @@ int main(int argc, char **argv)
     }
     
     free(buffer);
+
+
+    if(!reg_only) {
     
-    // Write out final block
-    // -------------------------------------------------------------------------
-    int final_buf_size;
-    char *final_buf;
-    if (glite_eds_encrypt_final(ectx, &final_buf, &final_buf_size, &error))
-    {
-	TRACE_ERR((stderr, "Error during glite_eds_encrypt_final: %s\n",
-		   error));
-	free(error);
-	if (glite_eds_unregister(id, &error))
-	{
-	    TRACE_ERR((stderr, "Error during glite_eds_unregister: %s\n",
-		       error));
-	    free(error);
-	}
-        close(fdump);
-        glite_close(fh);
-	glite_unlink(remotefilename);
-	return -1;
+	// Write out final block
+	// -------------------------------------------------------------------------
+	int final_buf_size;
+	char *final_buf;
+	if (glite_eds_encrypt_final(ectx, &final_buf, &final_buf_size, &error))
+	    {
+		TRACE_ERR((stderr, "Error during glite_eds_encrypt_final: %s\n",
+			   error));
+		free(error);
+		if (glite_eds_unregister(id, &error))
+		    {
+			TRACE_ERR((stderr, "Error during glite_eds_unregister: %s\n",
+				   error));
+			free(error);
+		    }
+		close(fdump);
+		glite_close(fh);
+		glite_unlink(remotefilename);
+		return -1;
+	    }
+	glite_write(fh, final_buf, final_buf_size);
+	free(final_buf);
     }
-    glite_write(fh, final_buf, final_buf_size);
-    free(final_buf);
-    
+
     
     // Close Local File
     // -------------------------------------------------------------------------
