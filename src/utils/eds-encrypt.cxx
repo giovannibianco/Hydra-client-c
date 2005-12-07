@@ -20,7 +20,7 @@
 #include <glite/data/hydra/c/eds-simple.h>
 #include <glite/data/io/client/ioclient.h>
 
-#define PROGNAME     "glite-eds-register"
+#define PROGNAME     "glite-eds-encrypt"
 #define PROGAUTHOR   "(C) EGEE"
 
 #define TRACE_LOG(a)  if(!silent) fprintf a
@@ -29,19 +29,17 @@
 void print_usage_and_die(FILE * out){
     fprintf(out, "\n");
     fprintf(out, "<%s> Version %s by %s\n", PROGNAME, PACKAGE_VERSION, PROGAUTHOR);
-    fprintf(out, "usage: %s <localfilename> <remotefilename> <ID> <outfilename>\n", PROGNAME);
+    fprintf(out, "usage: %s <remotefilename> <localfilename> <outfilename>\n", PROGNAME);
     fprintf(out, " ");
-    fprintf(out, " Register the keys into hydra, while providing an encrypted version locally. \n");
-    fprintf(out, " This command does not call the glite-io server. \n\n");
-    fprintf(out, " localfilename : The local path to the file to be put \n");
-    fprintf(out, " remotefilename: The remote (lfn) path of the file write \n");
-    fprintf(out, " ID            : The ID by which the keys are stored in the hydra catalog\n");
-    fprintf(out, " outfilename   : The local path to the encrypted file \n");
+    fprintf(out, " Encrypt a local file locally with the key that is stored for a given remote filename. \n");
+    fprintf(out, " This command will read the encryption keys for the given remotefile, and encrypt the local file. \n\n");
+    fprintf(out, " remotefilename: The remote (lfn) path of the file to fetch the keys from \n");
+    fprintf(out, " localfilename : The local path to the file to be encrypted \n");
+    fprintf(out, " outfilename   : The encrypted file which is written \n");
     fprintf(out, " Optional flags:\n");
     fprintf(out, "  -v      : verbose mode\n");
     fprintf(out, "  -q      : quiet mode\n");
-    fprintf(out, "  -c name : cipher name to use\n");
-    fprintf(out, "  -k n    : key size to use in bits\n");
+    fprintf(out, "  -s URL  : the IO server to talk to\n");
     fprintf(out, "  -h      : print this screen\n");
     if(out == stdout){
         exit(0);
@@ -53,13 +51,17 @@ int main(int argc, char **argv)
 {
     int flag, key_size = 0;
     char *in, *remote, *id, *out, *cipher = NULL;
+    char *service_endpoint = NULL;
     bool silent = false;
 
-    while ((flag = getopt(argc, argv, "qhvc:k:")) != -1) {
+    while ((flag = getopt(argc, argv, "qhv")) != -1) {
 	switch (flag) {
 	    case 'q':
 		silent = true;
 		unsetenv(TOOL_USER_VERBOSE);
+		break;
+	    case 's':
+		service_endpoint = strdup(optarg);
 		break;
 	    case 'h':
 		print_usage_and_die(stdout);
@@ -68,27 +70,64 @@ int main(int argc, char **argv)
 		setenv(TOOL_USER_VERBOSE, "YES", 1);
 		silent = false;
 		break;
-	    case 'c':
-		cipher = strdup(optarg);
-		break;
-	    case 'k':
-		if (1 != sscanf(optarg, "%d", &key_size))
-		{
-		    TRACE_ERR((stderr, "Parsing key size failed!"));
-		}
-		break;
 	    default:
 		print_usage_and_die(stderr);
 		break;
 	}
     }
     
-    if (argc != (optind+4)) {
+    if (argc != (optind+3)) {
 	print_usage_and_die(stderr);
     }
     
-    in = argv[optind++]; remote = argv[optind++]; id = argv[optind++]; out = argv[optind++];
+    remote = argv[optind++]; in = argv[optind++]; out = argv[optind++];
     
+    // Initialize the io client
+    // -------------------------------------------------------------------------
+    int initres = glite_io_initialize(service_endpoint, false);
+    if (initres < 0) {
+        TRACE_ERR((stderr,"Cannot Initialize!\n"));
+        return -1;
+    }
+
+    // Open remote file
+    // -------------------------------------------------------------------------
+    glite_result gl_res;
+    glite_handle fh = glite_open(remote,O_RDONLY,0,0,&gl_res);
+    if (0 == fh) {
+        const char * error_msg = glite_strerror(gl_res);
+        TRACE_ERR((stderr,"Cannot Open Remote File %s. Error is \"%s (code: %d)\"\n",remote,error_msg, gl_res));
+        return -1;
+    }
+
+    // Initialize eds library
+    // -------------------------------------------------------------------------
+    char *error;
+    EVP_CIPHER_CTX *dctx;
+
+    struct glite_stat stat_buf;
+    glite_int32 result = glite_fstat(fh, &stat_buf);
+    if(0 != result)
+	{
+	    const char * error_msg = glite_strerror(result);
+	    TRACE_ERR((stderr, "Cannot Get Remote File Stat. Error is \"%s (code: "
+		       "%d)\"\n",error_msg, result));
+	    glite_close(fh);
+	    return -1;
+	} 
+
+    id = stat_buf.guid;
+    glite_close(fh);
+
+    if (NULL == (dctx = glite_eds_decrypt_init(id, &error)))
+    {
+	TRACE_ERR((stderr, "Error during glite_eds_decrypt_init: %s\n",
+	    error));
+	free(error);
+	return -1;
+    }
+
+
     // Open input file
     // -------------------------------------------------------------------------
     int in_fd = open(in, O_RDONLY);
@@ -97,7 +136,7 @@ int main(int argc, char **argv)
 	TRACE_ERR((stderr,"Cannot Open Local Input File %s. Error is \"%s (code: %d)\"\n", in, error_msg, errno));
 	return -1;
     }
-    
+
     // Open output file
     // -------------------------------------------------------------------------
     int out_fd = open(out, O_WRONLY|O_CREAT, 0640);
@@ -107,26 +146,7 @@ int main(int argc, char **argv)
 	return -1;
     }
 
-    // Initialize eds library
-    // -------------------------------------------------------------------------
-    char *error;
-    EVP_CIPHER_CTX *ectx;
-    
-    if (NULL == (ectx = glite_eds_register_encrypt_init(id,
-							cipher, key_size, &error)))
-    {
-	TRACE_ERR((stderr, "Error during glite_eds_register_encrypt_init: %s\n",
-		   error));
-	free(error);
-	if (glite_eds_unregister(remote, &error))
-	{
-	    TRACE_ERR((stderr, "Error during glite_eds_unregister: %s\n",
-		       error));
-	    free(error);
-	}
-	return -1;
-    }
-    
+
     // Do encryption
     // -------------------------------------------------------------------------
     const int in_buf_size = 65536;
@@ -138,28 +158,16 @@ int main(int argc, char **argv)
 	{
 	    const char * error_msg = strerror(errno);
 	    TRACE_ERR((stderr,"\nFatal error during output write. Error is \"%s (code: %d)\"\n", error_msg, errno));
-	    if (glite_eds_unregister(remote, &error))
-	    {
-		TRACE_ERR((stderr, "Error during glite_eds_unregister: %s\n",
-			   error));
-		free(error);
-	    }
 	    close(in_fd); close(out_fd);
 	    return -1;
 	}
 	int enc_buffer_size;
 	char *enc_buffer;
-	if (glite_eds_encrypt_block(ectx, in_buf, in_read, &enc_buffer, &enc_buffer_size, &error))
+	if (glite_eds_encrypt_block(dctx, in_buf, in_read, &enc_buffer, &enc_buffer_size, &error))
 	{
 	    TRACE_ERR((stderr, "Error during glite_eds_encrypt_block: %s\n",
 		       error));
 	    free(error);
-	    if (glite_eds_unregister(remote, &error))
-	    {
-		TRACE_ERR((stderr, "Error during glite_eds_unregister: %s\n",
-			   error));
-		free(error);
-	    }
 	    close(in_fd); close(out_fd);
 	    return -1;
 	}
@@ -169,12 +177,6 @@ int main(int argc, char **argv)
 	if (out_write != enc_buffer_size) {
 	    const char * error_msg = strerror(errno);
 	    TRACE_ERR((stderr,"\nFatal error during output write. Error is \"%s (code: %d)\"\n", error_msg, errno));
-	    if (glite_eds_unregister(remote, &error))
-	    {
-		TRACE_ERR((stderr, "Error during glite_eds_unregister: %s\n",
-			   error));
-		free(error);
-	    }
 	    close(in_fd); close(out_fd);
 	    return -1;
 	}
@@ -184,17 +186,11 @@ int main(int argc, char **argv)
     
     int final_buf_size;
     char *final_buf;
-    if (glite_eds_encrypt_final(ectx, &final_buf, &final_buf_size, &error))
+    if (glite_eds_encrypt_final(dctx, &final_buf, &final_buf_size, &error))
     {
 	TRACE_ERR((stderr, "Error during glite_eds_encrypt_final: %s\n",
 		 error));
 	free(error);
-	if (glite_eds_unregister(remote, &error))
-	{
-	    TRACE_ERR((stderr, "Error during glite_eds_unregister: %s\n",
-		       error));
-	    free(error);
-	}
 	close(in_fd); close(out_fd);
 	return -1;
     }
@@ -212,7 +208,7 @@ int main(int argc, char **argv)
     
     // Shut down encryption
     // -------------------------------------------------------------------------
-    glite_eds_finalize(ectx, &error);
+    glite_eds_finalize(dctx, &error);
     
     return 0;
 }
