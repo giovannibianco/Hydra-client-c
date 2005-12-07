@@ -1,10 +1,18 @@
 *** Release glite-data-hydra-cli_R_2_0_0 2005-12-06 pkunszt
 
-    o Fixed #..: encrypted storage does not work 
+    o Fixed #: encrypted storage does not work 
     o Make an interface change: the eds-client now registers always
       with the GUID. The LFN is not needed and there is no interaction
       with the Fireman catalog directly anymore (which was an unnecessary
       'vulnerability')
+    o Add the following options to the glite-eds-* command liners:
+       -s (was documented but not implemented - choose the io server)
+       -i (set the ID)
+       -u (for put: don't actually encrypt the file but do all the rest;
+           dicom trigger use case)
+    o fixed a potential problem: the glite-eds-get did do a hydra-unregister
+      upon one of the failure modes - this is certainly unwanted and
+      would've caused problems
 
 
 *** Release glite-data-hydra-cli_R_1_0_2 2005-11-01
