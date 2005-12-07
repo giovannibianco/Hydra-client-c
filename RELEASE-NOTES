@@ -1,5 +1,9 @@
 *** Release glite-data-hydra-cli_R_2_0_0 2005-12-06 pkunszt
 
+    o Fixed #14100: hydra-cli: glite-eds-encrypt command
+
+*** Release glite-data-hydra-cli_R_2_0_0 2005-12-06 pkunszt
+
     o Fixed #14098: encrypted storage does not work 
     o Make an interface change: the eds-client now registers always
       with the GUID. The LFN is not needed and there is no interaction
