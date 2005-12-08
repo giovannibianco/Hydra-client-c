@@ -75,7 +75,7 @@ int main(int argc, char **argv)
     char *service_endpoint = NULL;
     char *id = NULL;
 
-    while ((flag = getopt (argc, argv, "m:qhvcu:k:s:i:")) != -1) {
+    while ((flag = getopt (argc, argv, "m:qhvuc:k:s:i:")) != -1) {
         switch (flag) {
             case 'm':
                 sscanf(optarg,"%o",&mode);
