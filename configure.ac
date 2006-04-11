@@ -18,7 +18,7 @@ AM_INIT_AUTOMAKE([1.6.3 subdir-objects])
 AC_COPYRIGHT([Copyright (c) 2004 The EU EGEE Project
 See LICENCE file for details
 ])
-AC_REVISION([$Revision: 1.5 $])
+AC_REVISION([$Revision: 1.6 $])
 
 #Environment.
 WORKDIR=`pwd`
@@ -107,7 +107,7 @@ AC_CONFIG_FILES([src/Makefile])
 AC_CONFIG_FILES([src/c/Makefile])
 AC_CONFIG_FILES([src/utils/Makefile])
 AC_CONFIG_FILES([doc/Makefile])
-AC_CONFIG_FILES([doc/html/Makefile])
+AC_CONFIG_FILES([doc/apidoc/Makefile])
 AC_CONFIG_FILES([doc/man/Makefile])
 
 AC_OUTPUT

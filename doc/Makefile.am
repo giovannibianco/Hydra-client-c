@@ -6,11 +6,11 @@
 #  Common doc/Makefile.am file for the GLite Data IO Client module
 #
 #  Authors: Akos.Frohner <Akos.Frohner@cern.ch>
-#  Version info: $Id: Makefile.am,v 1.1 2005-10-20 08:26:53 szamsu Exp $
+#  Version info: $Id: Makefile.am,v 1.2 2006-04-11 13:24:28 szamsu Exp $
 #  Release: $Name: not supported by cvs2svn $
 #
 #
-SUBDIRS = . html man
+SUBDIRS = . apidoc man
 commonutdir = $(datadir)/doc/$(PACKAGE)
 dist_commonut_DATA = example.services.xml
 

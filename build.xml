@@ -77,33 +77,10 @@
 		 Local private targets
 		 ========================================= -->
 	
-	<target name="localinit" description="Module specific initialization tasks">
-		<!-- Create Doxygen Documentation-->
-		<exec executable="doxygen">
-		    <arg value="config/Doxyfile"/>
-		</exec>
-		<copy todir="doc/html">
-    			<fileset dir="doc/autogen/html"/>
-	  	</copy>
-	</target>
+	<target name="localinit" description="Module specific initialization tasks"/>
 	
-	<!--
-	<target name="doc" description="Module specific doc task" depends="unitcoverage">
-		<mkdir dir="build/doc/autogen"/>
-		<exec executable="doxygen">
-		        <arg value="config/Doxyfile"/>
-		</exec>
-	</target>
-	-->
+	<target name="localcompile" description="Module specific compile tasks"/>
 	
-	<target name="localcompile" description="Module specific compile tasks">
-	</target>
-	
-	<target name="localclean" description="Module specific cleaning tasks">
-	    <delete dir="doc/autogen"/>
-		<delete>
-            <fileset dir="doc/html" includes="*.html *.png *.css"/>
-        </delete>
-	</target>
+	<target name="localclean" description="Module specific cleaning tasks"/>
 
 </project>

@@ -6,11 +6,11 @@
 #  Common doc/html/Makefile.am file for the GLite Data IO Client module
 #
 #  Authors: Akos Frohner <Akos.Frohner@cern.ch>
-#  Version info: $Id: Makefile.am,v 1.2 2005-10-20 09:38:42 szamsu Exp $
+#  Version info: $Id: Makefile.am,v 1.1 2006-04-11 13:24:28 szamsu Exp $
 #  Release: $Name: not supported by cvs2svn $
 #
 #
-commonutdir = $(datadir)/doc/$(PACKAGE)/html
+commonutdir = $(datadir)/doc/$(PACKAGE)/apidoc
 dist_commonut_DATA = \
 	doxygen.css \
 	doxygen.png \
@@ -20,5 +20,11 @@ dist_commonut_DATA = \
 	globals.html \
 	globals_func.html \
 	index.html
+
+Doxyfile: $(srcdir)/Doxyfile.template
+	sed -e "s#\@top_srcdir\@#$(top_srcdir)#; s#\@srcdir\@#$(srcdir)#" $(srcdir)/Doxyfile.template >$@
+
+$(dist_commonut_DATA): Doxyfile
+	doxygen Doxyfile
 
 MAINTAINERCLEANFILES = Makefile.in
