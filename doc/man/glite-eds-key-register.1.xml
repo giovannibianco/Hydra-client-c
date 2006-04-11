@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+       	"http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+
+<refentry id="glite-eds-key-register.1" revision="$Revision: 1.1 $">
+
+<refentryinfo>
+    <!-- These information are shown on the manpage -->
+    <author>
+	<firstname>Akos</firstname>
+	<surname>Frohner</surname>
+    </author>
+    <date>April 2006</date>
+    <productname>GLite</productname>
+    <title>gLite Data Management</title>
+
+    <!-- These information are not shown -->
+    <copyright>
+	<year>2006</year>
+	<holder>Members of the EGEE Collaboration</holder>
+    </copyright>
+</refentryinfo>
+
+<refmeta>
+    <refentrytitle>glite-eds-key-register</refentrytitle>
+    <manvolnum>1</manvolnum>
+</refmeta>
+
+<refnamediv>
+    <refname>glite-eds-key-register</refname>
+    <refpurpose>
+        Generates an encryption key and registers it in the Hydra KeyStore.
+    </refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+    <cmdsynopsis>
+	<command>glite-eds-key-register</command>
+
+    <group>
+		<arg choice="plain"><option>-h</option></arg>
+	</group>
+	<group>
+		<arg choice="plain"><option>-q</option></arg>
+	</group>
+	<group>
+	        <arg choice="plain"><option>-v</option></arg>
+	</group>
+	<group>
+		<arg choice="plain"><option>-c <replaceable>CIPHER</replaceable></option></arg>
+	</group>
+	<group>
+		<arg choice="plain"><option>-k <replaceable>KEYLENGTH</replaceable></option></arg>
+	</group>
+	<group>
+		<arg choice="plain"><option>-i <replaceable>ID</replaceable></option></arg>
+	</group>
+	<group>
+		<arg choice="plain"><option>-s <replaceable>SERVICE</replaceable></option></arg>
+	</group>
+    </cmdsynopsis>
+</refsynopsisdiv>
+
+<refsect1>
+    <title>DESCRIPTION</title>
+    <para>
+        <command>glite-eds-key-register</command> is a command-line tool for 
+        generating encryption key and storing it in the Hydra KeyStore. The
+        key can be deleted by <command>glite-eds-key-unregister</command>.
+    </para>
+</refsect1>
+
+<refsect1>
+    <title>OPTIONS</title>
+    <variablelist>
+
+	<varlistentry>
+	    <term>
+		<group choice="plain">
+		    <arg choice="plain"><option>-h</option></arg>
+		</group>
+	    </term>
+	    <listitem><para>
+	        Show help screen.
+	    </para></listitem>
+	</varlistentry>
+
+	<varlistentry>
+	    <term>
+		<group choice="plain">
+		    <arg choice="plain"><option>-q</option></arg>
+		</group>
+	    </term>
+	    <listitem><para>
+	        Quiet operation.
+	    </para></listitem>
+	</varlistentry>
+
+	<varlistentry>
+	    <term>
+		<group choice="plain">
+		    <arg choice="plain"><option>-v</option></arg>
+		</group>
+	    </term>
+	    <listitem><para>
+	        Verbose operation.
+	    </para></listitem>
+	</varlistentry>
+
+	<varlistentry>
+	    <term>
+		<group choice="plain">
+		    <arg choice="plain"><option>-c <replaceable>CIPHER</replaceable></option></arg>
+		</group>
+	    </term>
+	    <listitem><para>
+	        Cipher name to use. 
+            See 'openssl list-cipher-commands' for the available options.
+            </para><para>
+            The current default is 'blowfish'.
+	    </para></listitem>
+	</varlistentry>
+	<varlistentry>
+	    <term>
+		<group choice="plain">
+		    <arg choice="plain"><option>-k <replaceable>KEYLENGTH</replaceable></option></arg>
+		</group>
+	    </term>
+	    <listitem><para>
+            Keylength to use in bits. 
+            See 'openssl list-cipher-commands' for the available options.
+            </para><para>
+            The current default is 128 bits.
+	    </para></listitem>
+	</varlistentry>
+
+	<varlistentry>
+	    <term>
+		<group choice="plain">
+		    <arg choice="plain"><option>-i <replaceable>ID</replaceable></option></arg>
+		</group>
+	    </term>
+	    <listitem><para>
+	        ID to be used to store the encryption data with (logical file name or GUID).
+	    </para></listitem>
+	</varlistentry>
+
+	<varlistentry>
+	    <term>
+		<group choice="plain">
+		    <arg choice="plain"><option>-s <replaceable>SERVICE</replaceable></option></arg>
+		</group>
+	    </term>
+	    <listitem><para>
+            If <option><replaceable>SERVICE</replaceable></option> starts with
+            <userinput>https://</userinput>, then it it used as the endpoint of
+            a Hydra KeyStore.  
+            Otherwise <option><replaceable>SERVICE</replaceable></option> is
+            taken as a service name, and serives discovery is used to determine
+            the service endpoint.
+	    </para></listitem>
+	</varlistentry>
+
+    </variablelist>
+</refsect1>
+
+</refentry>
+<!-- vim: set ai sw=4: -->

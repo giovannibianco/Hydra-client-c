@@ -2,46 +2,42 @@
 <!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
        	"http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 
-<refentry id="glite-eds-encrypt.1" revision="$Revision: 1.2 $">
+<refentry id="glite-eds-key-unregister.1" revision="$Revision: 1.1 $">
 
 <refentryinfo>
     <!-- These information are shown on the manpage -->
     <author>
-	<firstname>Peter</firstname>
-	<surname>Kunszt</surname>
+	<firstname>Akos</firstname>
+	<surname>Frohner</surname>
     </author>
-    <author>
-	<firstname>Zoltan</firstname>
-	<surname>Farkas</surname>
-    </author>
-    <date>December 2005</date>
+    <date>April 2006</date>
     <productname>GLite</productname>
     <title>gLite Data Management</title>
 
     <!-- These information are not shown -->
     <copyright>
-	<year>2005</year>
+	<year>2006</year>
 	<holder>Members of the EGEE Collaboration</holder>
     </copyright>
 </refentryinfo>
 
 <refmeta>
-    <refentrytitle>glite-eds-encrypt</refentrytitle>
+    <refentrytitle>glite-eds-key-unregister</refentrytitle>
     <manvolnum>1</manvolnum>
 </refmeta>
 
 <refnamediv>
-    <refname>glite-eds-encrypt</refname>
+    <refname>glite-eds-key-unregister</refname>
     <refpurpose>
-        Encrypt a local file using a known encryption key.
+        Removes the encryption key from the Hydra KeyStore.
     </refpurpose>
 </refnamediv>
 
 <refsynopsisdiv>
     <cmdsynopsis>
-	<command>glite-eds-encrypt</command>
+	<command>glite-eds-key-unregister</command>
 
-        <group>
+    <group>
 		<arg choice="plain"><option>-h</option></arg>
 	</group>
 	<group>
@@ -51,22 +47,21 @@
 	        <arg choice="plain"><option>-v</option></arg>
 	</group>
 	<group>
+		<arg choice="plain"><option>-i <replaceable>ID</replaceable></option></arg>
+	</group>
+	<group>
 		<arg choice="plain"><option>-s <replaceable>SERVICE</replaceable></option></arg>
 	</group>
-        <arg choice="plain"><option><replaceable>ID</replaceable></option></arg>
-        <arg choice="plain"><option><replaceable>INPUT_FILE</replaceable></option></arg>
-        <arg choice="plain"><option><replaceable>OUTPUT_FILE</replaceable></option></arg>
-
     </cmdsynopsis>
 </refsynopsisdiv>
 
 <refsect1>
     <title>DESCRIPTION</title>
     <para>
-	<command>glite-eds-encrpyt</command> is a command-line tool for encrypting a local input file
-	using an existing encryption key and write the output to a local output file.
-    <command>glite-eds-encrypt</command> will look up the key needed for
-    encryption in the Hydra KeyStore, using the key ID (logical file name or GUID).
+        <command>glite-eds-key-unregister</command> is a command-line tool for
+        removing the encryption keys from Hydra KeyStore.  If you have other
+        copies of files, encrypted with the given key, lying around, you will
+        not be able to decrypt them anymore!
     </para>
 </refsect1>
 
@@ -110,39 +105,30 @@
 	<varlistentry>
 	    <term>
 		<group choice="plain">
+		    <arg choice="plain"><option>-i <replaceable>ID</replaceable></option></arg>
+		</group>
+	    </term>
+	    <listitem><para>
+	        ID used to store the encryption data with (logical file name or GUID).
+	    </para></listitem>
+	</varlistentry>
+
+	<varlistentry>
+	    <term>
+		<group choice="plain">
 		    <arg choice="plain"><option>-s <replaceable>SERVICE</replaceable></option></arg>
 		</group>
 	    </term>
 	    <listitem><para>
             If <option><replaceable>SERVICE</replaceable></option> starts with
             <userinput>https://</userinput>, then it it used as the endpoint of
-            the Hydra KeyStore.  
+            a Hydra KeyStore.  
             Otherwise <option><replaceable>SERVICE</replaceable></option> is
             taken as a service name, and serives discovery is used to determine
             the service endpoint.
 	    </para></listitem>
 	</varlistentry>
 
-        <varlistentry>
-	    <term><option><replaceable>ID</replaceable></option></term>
-	    <listitem><para>
-	        The ID of the key, which can be a logical file name or GUID.
-	    </para></listitem>
-	</varlistentry>
-
-        <varlistentry>
-	    <term><option><replaceable>INPUT_FILE</replaceable></option></term>
-	    <listitem><para>
-	        The name of the input file on the local filesystem.
-	    </para></listitem>
-	</varlistentry>
-
-        <varlistentry>
-	    <term><option><replaceable>OUTPUT_FILE</replaceable></option></term>
-	    <listitem><para>
-	        The name of the file on the local filesystem to write the encrypted output to.
-	    </para></listitem>
-	</varlistentry>
     </variablelist>
 </refsect1>
 

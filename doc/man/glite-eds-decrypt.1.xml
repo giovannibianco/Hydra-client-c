@@ -2,44 +2,40 @@
 <!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
        	"http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 
-<refentry id="glite-eds-encrypt.1" revision="$Revision: 1.2 $">
+<refentry id="glite-eds-decrypt.1" revision="$Revision: 1.1 $">
 
 <refentryinfo>
     <!-- These information are shown on the manpage -->
     <author>
-	<firstname>Peter</firstname>
-	<surname>Kunszt</surname>
+	<firstname>Akos</firstname>
+	<surname>Frohner</surname>
     </author>
-    <author>
-	<firstname>Zoltan</firstname>
-	<surname>Farkas</surname>
-    </author>
-    <date>December 2005</date>
+    <date>April 2006</date>
     <productname>GLite</productname>
     <title>gLite Data Management</title>
 
     <!-- These information are not shown -->
     <copyright>
-	<year>2005</year>
+	<year>2006</year>
 	<holder>Members of the EGEE Collaboration</holder>
     </copyright>
 </refentryinfo>
 
 <refmeta>
-    <refentrytitle>glite-eds-encrypt</refentrytitle>
+    <refentrytitle>glite-eds-decrypt</refentrytitle>
     <manvolnum>1</manvolnum>
 </refmeta>
 
 <refnamediv>
-    <refname>glite-eds-encrypt</refname>
+    <refname>glite-eds-decrypt</refname>
     <refpurpose>
-        Encrypt a local file using a known encryption key.
+        Decrypt a local file using a known decryption key.
     </refpurpose>
 </refnamediv>
 
 <refsynopsisdiv>
     <cmdsynopsis>
-	<command>glite-eds-encrypt</command>
+	<command>glite-eds-decrypt</command>
 
         <group>
 		<arg choice="plain"><option>-h</option></arg>
@@ -63,10 +59,10 @@
 <refsect1>
     <title>DESCRIPTION</title>
     <para>
-	<command>glite-eds-encrpyt</command> is a command-line tool for encrypting a local input file
-	using an existing encryption key and write the output to a local output file.
-    <command>glite-eds-encrypt</command> will look up the key needed for
-    encryption in the Hydra KeyStore, using the key ID (logical file name or GUID).
+	<command>glite-eds-decrpyt</command> is a command-line tool for decrypting a local input file
+	using an existing decryption key and write the output to a local output file.
+    <command>glite-eds-decrypt</command> will look up the key needed for
+    decryption in the Hydra KeyStore, using the key ID (logical file name or GUID).
     </para>
 </refsect1>
 
@@ -133,14 +129,14 @@
         <varlistentry>
 	    <term><option><replaceable>INPUT_FILE</replaceable></option></term>
 	    <listitem><para>
-	        The name of the input file on the local filesystem.
+	        The name of the encrypted input file on the local filesystem.
 	    </para></listitem>
 	</varlistentry>
 
         <varlistentry>
 	    <term><option><replaceable>OUTPUT_FILE</replaceable></option></term>
 	    <listitem><para>
-	        The name of the file on the local filesystem to write the encrypted output to.
+	        The name of the file on the local filesystem to write the decrypted output to.
 	    </para></listitem>
 	</varlistentry>
     </variablelist>
