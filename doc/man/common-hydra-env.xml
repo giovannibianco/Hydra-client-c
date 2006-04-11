@@ -1,0 +1,14 @@
+<refsect1>
+    <title>ENVIRONMENT VARIABLES</title>
+
+    <variablelist>
+	<varlistentry>
+            <term><option><replaceable>GLITE_SD_METADATA_TYPE</replaceable></option></term>
+            <listitem><para>
+                Specifies the type of the Hydra KeyStore service to use during
+                service discovery.  The default value is org.glite.Metadata.
+            </para></listitem>
+        </varlistentry>
+    </variablelist>							    	
+
+</refsect1>

@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
-       	"http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+       	"http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY common-hydra-args SYSTEM "common-hydra-args.xml">
+<!ENTITY common-hydra-arg-desc SYSTEM "common-hydra-arg-desc.xml">
+<!ENTITY common-hydra-env SYSTEM "common-hydra-env.xml">
+]>
 
-<refentry id="glite-eds-encrypt.1" revision="$Revision: 1.2 $">
+<refentry id="glite-eds-encrypt.1" revision="$Revision: 1.3 $">
 
 <refentryinfo>
     <!-- These information are shown on the manpage -->
@@ -41,18 +45,8 @@
     <cmdsynopsis>
 	<command>glite-eds-encrypt</command>
 
-        <group>
-		<arg choice="plain"><option>-h</option></arg>
-	</group>
-	<group>
-		<arg choice="plain"><option>-q</option></arg>
-	</group>
-	<group>
-	        <arg choice="plain"><option>-v</option></arg>
-	</group>
-	<group>
-		<arg choice="plain"><option>-s <replaceable>SERVICE</replaceable></option></arg>
-	</group>
+&common-hydra-args;
+
         <arg choice="plain"><option><replaceable>ID</replaceable></option></arg>
         <arg choice="plain"><option><replaceable>INPUT_FILE</replaceable></option></arg>
         <arg choice="plain"><option><replaceable>OUTPUT_FILE</replaceable></option></arg>
@@ -74,77 +68,32 @@
     <title>OPTIONS</title>
     <variablelist>
 
-	<varlistentry>
-	    <term>
-		<group choice="plain">
-		    <arg choice="plain"><option>-h</option></arg>
-		</group>
-	    </term>
-	    <listitem><para>
-	        Show help screen.
-	    </para></listitem>
-	</varlistentry>
-
-	<varlistentry>
-	    <term>
-		<group choice="plain">
-		    <arg choice="plain"><option>-q</option></arg>
-		</group>
-	    </term>
-	    <listitem><para>
-	        Quiet operation.
-	    </para></listitem>
-	</varlistentry>
-
-	<varlistentry>
-	    <term>
-		<group choice="plain">
-		    <arg choice="plain"><option>-v</option></arg>
-		</group>
-	    </term>
-	    <listitem><para>
-	        Verbose operation.
-	    </para></listitem>
-	</varlistentry>
-
-	<varlistentry>
-	    <term>
-		<group choice="plain">
-		    <arg choice="plain"><option>-s <replaceable>SERVICE</replaceable></option></arg>
-		</group>
-	    </term>
-	    <listitem><para>
-            If <option><replaceable>SERVICE</replaceable></option> starts with
-            <userinput>https://</userinput>, then it it used as the endpoint of
-            the Hydra KeyStore.  
-            Otherwise <option><replaceable>SERVICE</replaceable></option> is
-            taken as a service name, and serives discovery is used to determine
-            the service endpoint.
-	    </para></listitem>
-	</varlistentry>
+&common-hydra-arg-desc;
 
         <varlistentry>
-	    <term><option><replaceable>ID</replaceable></option></term>
-	    <listitem><para>
-	        The ID of the key, which can be a logical file name or GUID.
-	    </para></listitem>
-	</varlistentry>
+            <term><option><replaceable>ID</replaceable></option></term>
+            <listitem><para>
+                The ID of the key, which can be a logical file name or GUID.
+            </para></listitem>
+        </varlistentry>
 
         <varlistentry>
-	    <term><option><replaceable>INPUT_FILE</replaceable></option></term>
-	    <listitem><para>
-	        The name of the input file on the local filesystem.
-	    </para></listitem>
-	</varlistentry>
+            <term><option><replaceable>INPUT_FILE</replaceable></option></term>
+            <listitem><para>
+                The name of the input file on the local filesystem.
+            </para></listitem>
+        </varlistentry>
 
         <varlistentry>
-	    <term><option><replaceable>OUTPUT_FILE</replaceable></option></term>
-	    <listitem><para>
-	        The name of the file on the local filesystem to write the encrypted output to.
-	    </para></listitem>
-	</varlistentry>
+            <term><option><replaceable>OUTPUT_FILE</replaceable></option></term>
+            <listitem><para>
+                The name of the file on the local filesystem to write the encrypted output to.
+            </para></listitem>
+        </varlistentry>
     </variablelist>
 </refsect1>
+
+&common-hydra-env;
 
 </refentry>
 <!-- vim: set ai sw=4: -->

@@ -1,0 +1,85 @@
+	<varlistentry>
+	    <term>
+		<group choice="plain">
+		    <arg choice="plain"><option>-h</option></arg>
+		</group>
+	    </term>
+
+	    <listitem><para>
+		Print a short help message on parameters and usage, and exit.
+	    </para></listitem>
+	</varlistentry>
+	<varlistentry>
+	    <term>
+		<group choice="plain">
+		    <arg choice="plain"><option>-q</option></arg>
+		</group>
+	    </term>
+
+	    <listitem><para>
+		Quiet operation.
+	    </para></listitem>
+	</varlistentry>
+	<varlistentry>
+	    <term>
+		<group choice="plain">
+		    <arg choice="plain"><option>-s <replaceable>SERVICE</replaceable></option></arg>
+		</group>
+	    </term>
+
+	    <listitem>
+		<para>
+		    Specifies the service endpoint to use.
+		    If <option><replaceable>SERVICE</replaceable></option> starts
+		    with <userinput>http://</userinput>, <userinput>https://</userinput> or 
+            <userinput>httpg://</userinput>,
+		    then it is taken as a direct service endpoint URL.
+		    Otherwise <option><replaceable>SERVICE</replaceable></option> is taken as
+		    a service instance name and Service Discovery is invoked to look up the
+		    endpoint.
+		</para>
+		<para>
+		    If this option is not specified, Service Discovery will be invoked and
+		    the first available catalog will be used. If the Service Discovery
+		    fails, the program will exit with an error.
+		</para>
+		<note>
+		    <para>
+			If this option is not specified, only services with a known good status
+			will be returned by Service Discovery. However if you explicitely specify a
+			service name or an endpoint, the tool will try to use it regardless of its
+			registered status.
+		    </para>
+		</note>
+		<note>
+		    <para>
+			If you specify an HTTP URL with an empty host name, the tool will dump
+			the SOAP requests to the standard output and will read the SOAP
+			reply from stdin.
+		    </para>
+		</note>
+	    </listitem>
+	</varlistentry>
+	<varlistentry>
+	    <term>
+		<group choice="plain">
+		    <arg choice="plain"><option>-v</option></arg>
+		</group>
+	    </term>
+
+	    <listitem><para>
+		Increases the verbosity level.
+	    </para></listitem>
+	</varlistentry>
+	<varlistentry>
+	    <term>
+		<group choice="plain">
+		    <arg choice="plain"><option>-V</option></arg>
+		</group>
+	    </term>
+
+	    <listitem><para>
+		Print the version number and exit.
+	    </para></listitem>
+	</varlistentry>
+<!-- vim: set ai sw=4: -->
