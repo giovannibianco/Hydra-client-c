@@ -18,7 +18,7 @@ AM_INIT_AUTOMAKE([1.6.3 subdir-objects])
 AC_COPYRIGHT([Copyright (c) 2004 The EU EGEE Project
 See LICENCE file for details
 ])
-AC_REVISION([$Revision: 1.6 $])
+AC_REVISION([$Revision: 1.7 $])
 
 #Environment.
 WORKDIR=`pwd`
@@ -97,6 +97,15 @@ AC_ARG_WITH([htmldir],
 	[htmldir=$withval],
 	[htmldir='${datadir}/doc/${PACKAGE}/html'])
 AC_SUBST([htmldir])
+
+# Magic needed to ensure glib comes from the repository
+AC_ARG_WITH([glib2_devel_prefix], AC_HELP_STRING([--with-glib2-devel-prefix], [Path where glib2 is installed]), [PKG_CONFIG_PATH="$withval/lib/pkgconfig"; export PKG_CONFIG_PATH])
+
+# Look for glib
+AM_PATH_GLIB_2_0([2.2.3])
+if test "$no_glib" = yes; then
+    AC_MSG_ERROR([Required dependency glib2 was not found])
+fi
 
 # Configuration items
 AC_PREFIX_DEFAULT([/opt/glite])
