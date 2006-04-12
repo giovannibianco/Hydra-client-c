@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+       	"http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY common-hydra-args SYSTEM "common-hydra-args.xml">
+<!ENTITY common-hydra-arg-desc SYSTEM "common-hydra-arg-desc.xml">
+<!ENTITY common-hydra-env SYSTEM "common-hydra-env.xml">
+]>
+
+<refentry id="glite-eds-setacl.1" revision="$Revision: 1.1 $">
+
+<refentryinfo>
+    <!-- These information are shown on the manpage -->
+    <author>
+	<firstname>Akos</firstname>
+	<surname>Frohner</surname>
+    </author>
+    <date>April 2006</date>
+    <productname>gLite</productname>
+    <title>gLite Data Management</title>
+
+    <!-- These information are not shown -->
+    <copyright>
+	<year>2006</year>
+	<holder>Members of the EGEE Collaboration</holder>
+    </copyright>
+</refentryinfo>
+
+<refmeta>
+    <refentrytitle>glite-eds-setacl</refentrytitle>
+    <manvolnum>1</manvolnum>
+</refmeta>
+
+<refnamediv>
+    <refname>glite-eds-setacl</refname>
+    <refpurpose>
+        Modify the ACL of encryption key and optionally encrupted files.
+    </refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+    <cmdsynopsis>
+	<command>glite-eds-setacl</command>
+	<!-- We use "group" so adding long options later will be easy -->
+
+	&common-hydra-args;
+
+	<group>
+	    <arg choice="plain"><option>-b <replaceable>NUM</replaceable></option></arg>
+	</group>
+	<group choice="req" rep="repeat">
+	    <arg choice="plain"><option>-d <replaceable>PRINCIPAL</replaceable></option></arg>
+	</group>
+	<group choice="req" rep="repeat">
+	    <arg choice="plain"><option>-m <replaceable>ACL</replaceable></option></arg>
+	</group>
+	<arg choice="plain" rep="repeat"><option><replaceable>ID</replaceable></option></arg>
+    </cmdsynopsis>
+    <cmdsynopsis>
+	<command>glite-eds-setacl</command>
+	<!-- We use "group" so adding long options later will be easy -->
+
+	&common-hydra-args;
+
+	<group>
+	    <arg choice="plain"><option>-b <replaceable>NUM</replaceable></option></arg>
+	</group>
+	<group choice="req" rep="repeat">
+	    <arg choice="plain"><option>-x <replaceable>ACL</replaceable></option></arg>
+	</group>
+	<arg choice="plain" rep="repeat"><option><replaceable>ID</replaceable></option></arg>
+    </cmdsynopsis>
+    <cmdsynopsis>
+	<command>glite-eds-setacl</command>
+	<!-- We use "group" so adding long options later will be easy -->
+
+	&common-hydra-args;
+
+	<group>
+	    <arg choice="plain"><option>-b <replaceable>NUM</replaceable></option></arg>
+	</group>
+	<group>
+	    <arg choice="plain"><option>-r</option></arg>
+	</group>
+	<group choice="req">
+	    <arg choice="plain"><option>-D <replaceable>FILE</replaceable></option></arg>
+	    <arg choice="plain"><option>-M <replaceable>FILE</replaceable></option></arg>
+	    <arg choice="plain"><option>-X <replaceable>FILE</replaceable></option></arg>
+	</group>
+	<arg choice="plain" rep="repeat"><option><replaceable>ID</replaceable></option></arg>
+    </cmdsynopsis>
+</refsynopsisdiv>
+
+<refsect1>
+    <title>DESCRIPTION</title>
+    <para>
+	<command>glite-eds-setacl</command> is a command-line tool for modifying the
+	ACL of encryption keys (and files).
+    </para>
+</refsect1>
+
+<refsect1>
+    <title>OPTIONS</title>
+    <variablelist>
+
+	&common-hydra-arg-desc;
+
+	<varlistentry>
+	    <term>
+		<group choice="plain">
+		    <arg choice="plain"><option>-b <replaceable>NUM</replaceable></option></arg>
+		</group>
+	    </term>
+
+	    <listitem><para>
+		Set the number of modifications that will be sent in a single batch operation.
+	    </para></listitem>
+	</varlistentry>
+	<varlistentry>
+	    <term>
+		<group choice="plain">
+		    <arg choice="plain"><option>-d <replaceable>PRINCIPAL</replaceable></option></arg>
+		</group>
+	    </term>
+
+	    <listitem><para>
+		Delete the ACL entry for the specified <replaceable>PRINCIPAL</replaceable>.
+		If there was no previous ACL entry for <replaceable>PRINCIPAL</replaceable>,
+		the command does nothing.
+		The same <replaceable>PRINCIPAL</replaceable> must not appear in
+		a <option>-m</option> option.
+		May not be used together with the <option>-x</option> option.
+	    </para></listitem>
+	</varlistentry>
+	<varlistentry>
+	    <term>
+		<group choice="plain">
+		    <arg choice="plain"><option>-m <replaceable>ACL</replaceable></option></arg>
+		</group>
+	    </term>
+
+	    <listitem><para>
+		Add or modify an existing ACL entry. ACL entries have the form
+		of <replaceable>PRINCIPAL:PERMISSION</replaceable>, as described
+		by the <citerefentry><refentrytitle>glite-eds-getacl</refentrytitle>
+		<manvolnum>1</manvolnum></citerefentry> command. If there ID has no previous
+		ACL entry for <replaceable>PRINCIPAL</replaceable>, a new entry will be added,
+		otherwise the existing ACL entry will be modified.
+		The same <replaceable>PRINCIPAL</replaceable> must not appear in
+		a <option>-d</option> option.
+		May not be used together with the <option>-x</option> option.
+	    </para></listitem>
+	</varlistentry>
+	<varlistentry>
+	    <term>
+		<group choice="plain">
+		    <arg choice="plain"><option>-x <replaceable>ACL</replaceable></option></arg>
+		</group>
+	    </term>
+
+	    <listitem><para>
+		Set the list of ACL entries to exactly the set specified at the
+		command line. Any other previous ACL entries will be discarded.
+		<replaceable>ACL</replaceable> may be <userinput>NONE</userinput>, which
+		will cause all existing ACL entries to be deleted and no new ACL entries to
+		be added.
+		May not be used together with the <option>-d</option> and <option>-m</option> options.
+	    </para></listitem>
+	</varlistentry>
+	<varlistentry>
+	    <term>
+		<group choice="plain">
+		    <arg choice="plain"><option>-D <replaceable>FILE</replaceable></option></arg>
+		</group>
+	    </term>
+
+	    <listitem>
+		<para>
+		    Delete the ACLs listed in <replaceable>FILE</replaceable>.
+		    <replaceable>FILE</replaceable> must contain one ACL specification per line.
+		    Lines starting with <userinput>#</userinput> (hash sign) are treated as comments and
+		    ignored. Reading of the file stops at the first empty line. When deleting ACLs,
+		    only the principal name is used, the permissions listed in the file are not checked.
+		    If <replaceable>FILE</replaceable> is <userinput>-</userinput> (dash), the ACLs are
+		    read from the standard input.
+		</para>
+		<note>
+		    <para>
+			The output of
+			the <citerefentry><refentrytitle>glite-eds-getacl</refentrytitle>
+			<manvolnum>1</manvolnum></citerefentry> command is suitable as input
+			for this option.
+		    </para>
+		</note>
+	    </listitem>
+	</varlistentry>
+	<varlistentry>
+	    <term>
+		<group choice="plain">
+		    <arg choice="plain"><option>-M <replaceable>FILE</replaceable></option></arg>
+		</group>
+	    </term>
+
+	    <listitem><para>
+		Add or modify the ACLs listed in <replaceable>FILE</replaceable>.
+	    </para></listitem>
+	</varlistentry>
+	<varlistentry>
+	    <term>
+		<group choice="plain">
+		    <arg choice="plain"><option>-X <replaceable>FILE</replaceable></option></arg>
+		</group>
+	    </term>
+
+	    <listitem><para>
+		Set the list of ACLs to exactly what is listed in <replaceable>FILE</replaceable>.
+	    </para></listitem>
+	</varlistentry>
+	<varlistentry>
+	    <term><option><replaceable>ID</replaceable></option></term>
+
+	    <listitem>
+            <para>
+                Name of the keys (and files) to list. 
+            </para>
+	    </listitem>
+	</varlistentry>
+    </variablelist>
+</refsect1>
+
+&common-hydra-env;
+
+<refsect1>
+    <title>EXAMPLE</title>
+    <para>
+        Setting the ACL of an entry:
+        <literallayout class="monospaced">
+$ glite-eds-setacl GUID:7f12f1e1-9e50-4893-83f1-7d3e2f61aff9
+</literallayout>
+    </para>
+</refsect1>
+
+<refsect1>
+    <title>SEE ALSO</title>
+
+    <para>
+	<citerefentry>
+	    <refentrytitle>glite-eds-getacl</refentrytitle>
+	    <manvolnum>1</manvolnum>
+	</citerefentry>
+    </para>
+</refsect1>
+
+</refentry>
+<!-- vim: set ai sw=4: -->

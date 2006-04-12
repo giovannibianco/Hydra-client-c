@@ -5,7 +5,9 @@ man1_MANS = \
 		glite-eds-encrypt.1 \
 		glite-eds-decrypt.1 \
 		glite-eds-key-register.1 \
-		glite-eds-key-unregister.1
+		glite-eds-key-unregister.1 \
+		glite-eds-getacl.1 \
+		glite-eds-setacl.1
 
 COMMON_XMLFILES = common-gliteio-env.xml
 

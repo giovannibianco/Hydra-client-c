@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+       	"http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY common-hydra-args SYSTEM "common-hydra-args.xml">
+<!ENTITY common-hydra-arg-desc SYSTEM "common-hydra-arg-desc.xml">
+<!ENTITY common-hydra-env SYSTEM "common-hydra-env.xml">
+]>
+
+<refentry id="glite-eds-getacl.1" revision="$Revision: 1.1 $">
+
+<refentryinfo>
+    <!-- These information are shown on the manpage -->
+    <author>
+	<firstname>Akos</firstname>
+	<surname>Frohner</surname>
+    </author>
+    <date>April 2006</date>
+    <productname>gLite</productname>
+    <title>gLite Data Management</title>
+
+    <!-- These information are not shown -->
+    <copyright>
+	<year>2006</year>
+	<holder>Members of the EGEE Collaboration</holder>
+    </copyright>
+</refentryinfo>
+
+<refmeta>
+    <refentrytitle>glite-eds-getacl</refentrytitle>
+    <manvolnum>1</manvolnum>
+</refmeta>
+
+<refnamediv>
+    <refname>glite-eds-getacl</refname>
+    <refpurpose>
+        List the ACLs of encryption key and optionally of encrypted file.
+    </refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+    <cmdsynopsis>
+	<command>glite-eds-getacl</command>
+	<!-- We use "group" so adding long options later will be easy -->
+
+	&common-args;
+
+	<arg choice="plain" rep="repeat"><option><replaceable>ID</replaceable></option></arg>
+    </cmdsynopsis>
+</refsynopsisdiv>
+
+<refsect1>
+    <title>DESCRIPTION</title>
+    <para>
+	<command>glite-eds-getacl</command> is a command-line tool for listing the
+	ACLs on a set of encryption keys. The output contains the following:
+    </para>
+    <itemizedlist>
+	<listitem>
+	    <para>
+		A line stating with <computeroutput># ID:</computeroutput> followed
+		by the ID whose ACLs are being listed.
+	    </para>
+	</listitem>
+	<listitem>
+	    <para>
+		A line stating with <computeroutput># User:</computeroutput> followed
+		by the owner of the file.
+	    </para>
+	</listitem>
+	<listitem>
+	    <para>
+		A line stating with <computeroutput># Group:</computeroutput> followed
+		by the group the file belongs to.
+	    </para>
+	</listitem>
+	<listitem>
+	    <para>
+		A line stating with <computeroutput># Base perms:</computeroutput> followed
+		by the basic permissions of the key (and file).
+	    </para>
+	</listitem>
+	<listitem>
+	    <para>
+		For every ACL the key (and file) has, a line in the
+		form <computeroutput>PRINCIPAL:PERMISSION</computeroutput>. The format
+		of <computeroutput>PERMISSION</computeroutput> is a set of letters, which
+        are replaced by '-', when it is not enabled:
+        <itemizedlist>
+            <listitem><para>
+            r - read the key (and file)
+            </para></listitem>
+            <listitem><para>
+            w - modify the key (and file)
+            </para></listitem>
+            <listitem><para>
+            x - execute
+            </para></listitem>
+        </itemizedlist>
+	    </para>
+	</listitem>
+	<listitem>
+	    <para>
+		A blank line separating output for different IDs if more than one
+		were specified on the command line.
+	    </para>
+	</listitem>
+    </itemizedlist>
+</refsect1>
+
+<refsect1>
+    <title>OPTIONS</title>
+    <variablelist>
+
+	&common-arg-desc;
+
+	<varlistentry>
+	    <term><option><replaceable>ID</replaceable></option></term>
+
+	    <listitem>
+            <para>
+                Name of the keys (and files) to list. 
+            </para>
+	    </listitem>
+	</varlistentry>
+    </variablelist>
+</refsect1>
+
+&common-env;
+
+<refsect1>
+    <title>EXAMPLE</title>
+    <para>
+        Listing the ACL of an entry:
+        <literallayout class="monospaced">
+$ glite-eds-getacl GUID:7f12f1e1-9e50-4893-83f1-7d3e2f61aff9
+# ID: GUID:7f12f1e1-9e50-4893-83f1-7d3e2f61aff
+# User: /C=Utopia/CN=John Smith
+# Group: /vo.grid
+# Base perms: rwxrw-r--
+</literallayout>
+    </para>
+</refsect1>
+<refsect1>
+    <title>SEE ALSO</title>
+
+    <para>
+	<citerefentry>
+	    <refentrytitle>glite-eds-setacl</refentrytitle>
+	    <manvolnum>1</manvolnum>
+	</citerefentry>
+    </para>
+</refsect1>
+
+</refentry>
+<!-- vim: set ai sw=4: -->
