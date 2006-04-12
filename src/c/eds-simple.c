@@ -11,6 +11,8 @@
  *
  */
 
+/* asprintf() is GNU extension */
+#define _GNU_SOURCE
 #include <string.h>
 #include <stdio.h>
 #include <openssl/evp.h>
@@ -63,7 +65,7 @@ static char *get_attr_value(glite_catalog_Attribute **attrs, int attrnum,
  * Helper function - convert binary data to hexadecimal format, return is out
  * size or -1 in case of memory allocation error
  */
-static int to_hex(unsigned char *in, int insize, unsigned char **out)
+static int to_hex(char *in, int insize, char **out)
 {
     int i, ret = -1;
     const char hex[] = "0123456789ABCDEF";
@@ -115,7 +117,7 @@ static int to_bin(unsigned char *in, unsigned char **out)
 /**
  * Helper function - register datas in the metadata catalog
  */
-int glite_eds_put_metadata(char *id, char *hex_key, char *hex_iv, char *cipher,
+static int glite_eds_put_metadata(char *id, char *hex_key, char *hex_iv, char *cipher,
     char *keyinfo, char **error)
 {
     glite_catalog_ctx *ctx;
@@ -292,14 +294,14 @@ int glite_eds_register(char *id, char *cipher, int keysize,
         return -1;
     }
     RAND_bytes((char *)key, keyLength);
-    if (keyLength * 2 != to_hex(key, keyLength, (unsigned char **)&hex_key))
+    if (keyLength * 2 != to_hex(key, keyLength, &hex_key))
     {
         asprintf(error, "glite_eds_register error: converting key to hex "
             "format failed");
         return -1;
     }
     RAND_pseudo_bytes((char *)iv, ivLength);
-    if (ivLength * 2 != to_hex(iv, ivLength, (unsigned char **)&hex_iv))
+    if (ivLength * 2 != to_hex(iv, ivLength, &hex_iv))
     {
         asprintf(error, "glite_eds_register error: converting iv to hex "
             "format failed");
@@ -384,7 +386,7 @@ EVP_CIPHER_CTX *glite_eds_register_encrypt_init(char *id,
     }
     RAND_bytes((char *)key, keyLength);
 
-    if (keyLength * 2 != to_hex(key, keyLength, (unsigned char **)&hex_key))
+    if (keyLength * 2 != to_hex(key, keyLength, &hex_key))
     {
         asprintf(error, "glite_eds_register_encrypt_init error: converting key to hex "
             "format failed");
@@ -392,7 +394,7 @@ EVP_CIPHER_CTX *glite_eds_register_encrypt_init(char *id,
         return NULL;
     }
     RAND_pseudo_bytes((char *)iv, ivLength);
-    if (ivLength * 2 != to_hex(iv, ivLength, (unsigned char **)&hex_iv))
+    if (ivLength * 2 != to_hex(iv, ivLength, &hex_iv))
     {
         asprintf(error, "glite_eds_register_encrypt_init error: converting iv to hex "
             "format failed");
@@ -562,6 +564,7 @@ int glite_eds_decrypt_final(EVP_CIPHER_CTX *dctx, char **mem_out, int *mem_out_s
 int glite_eds_finalize(EVP_CIPHER_CTX *ctx, char **error)
 {
     EVP_CIPHER_CTX_cleanup(ctx);
+    *error = NULL;
     return 0;
 }
 
