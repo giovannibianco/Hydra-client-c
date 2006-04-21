@@ -13,6 +13,8 @@ bin_PROGRAMS = glite-eds-get \
                glite-eds-rm \
                glite-eds-encrypt \
                glite-eds-decrypt \
+			   glite-eds-key-register \
+			   glite-eds-key-unregister \
 			   glite-eds-setacl \
 			   glite-eds-getacl
 
@@ -44,9 +46,17 @@ glite_eds_encrypt_SOURCES  = eds-encrypt.c
 
 glite_eds_decrypt_SOURCES  = eds-decrypt.c
 
+glite_eds_key_register_SOURCES  = eds-register.c
+
+glite_eds_key_unregister_SOURCES  = eds-unregister.c
+
 glite_eds_encrypt_LDADD  = $(glite_data_eds_client_ldflags)
 
 glite_eds_decrypt_LDADD  = $(glite_data_eds_client_ldflags)
+
+glite_eds_key_register_LDADD  = $(glite_data_eds_client_ldflags)
+
+glite_eds_key_unregister_LDADD  = $(glite_data_eds_client_ldflags)
 
 glite_data_hydra_client_ldflags   = \
 	-L$(GLITE_LOCATION)/lib ../c/libglite_data_eds_simple.la \
