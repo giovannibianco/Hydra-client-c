@@ -22,7 +22,7 @@ extern "C" {
 
 
 /**
- * Register a new file in Hydra: create metadata entries (key/iv/...)
+ * Register a new file in Hydra: create key entries (key/iv/...)
  * 
  * @param id The SURL or GUID of the remote file.
  * @param cipher The cipher name to use.
@@ -36,7 +36,7 @@ int glite_eds_register(char *id, char *cipher, int keysize,
     char **error);
 
 /**
- * Register a new file in Hydra: create metadata entries (key/iv/...),
+ * Register a new file in Hydra: create key entries (key/iv/...),
  * initalizes encryption context
  * 
  * @param id The ID by which the crypt will be registered (remote file name or GUID).
@@ -53,7 +53,7 @@ EVP_CIPHER_CTX *glite_eds_register_encrypt_init(char *id,
 
 /**
  * Initialize encryption context for a file. Query key/iv/... from
- * metadata catalog
+ * key storage
  *
  * @param id The ID by which the crypt key is stored (remote file name or GUID)
  * @param error [OUT] Pointer to the error string.
@@ -66,7 +66,7 @@ EVP_CIPHER_CTX *glite_eds_encrypt_init(char *id, char **error);
 
 /**
  * Initialize decryption context for a file. Query key/iv/... from
- * metadata catalog
+ * key storage
  *
  * @param id The ID by which the crypt key is stored (remote file name or GUID).
  * @param error [OUT] Pointer to the error string.
