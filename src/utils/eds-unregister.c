@@ -50,7 +50,6 @@ static void print_usage_and_die(FILE * out){
 
 int main(int argc, char* argv[]) {
 
-    char *id = NULL;
     char *service_endpoint = NULL;
     int silent     = 0;
     char *error;
@@ -79,13 +78,17 @@ int main(int argc, char* argv[]) {
     if (argc != (optind+1)) {
         print_usage_and_die(stderr);
     }
-    strcpy(id, argv[optind + 1]);
 
-    if (glite_eds_unregister(id, &error))
+    if (glite_eds_unregister(argv[optind], &error))
     {
         TRACE_ERR((stderr, "Error during glite_eds_unregister: %s\n", error));
         free(error);
         return -1;
+    }
+
+    
+    if(!silent) {
+        fprintf(stdout, "The key has been unregistered for ID '%s'\n", argv[optind]);
     }
     
     return 0;

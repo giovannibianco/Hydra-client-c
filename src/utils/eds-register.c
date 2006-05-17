@@ -58,7 +58,6 @@ int main(int argc, char **argv)
     char *cipher = NULL;
     int silent = 0;
     char *service_endpoint = NULL;
-    char *id = NULL;
 
     while ((flag = getopt (argc, argv, "qhvc:k:s:")) != -1) {
         switch (flag) {
@@ -92,22 +91,25 @@ int main(int argc, char **argv)
     if (argc != (optind+1)) {
         print_usage_and_die(stderr);
     }
-    strcpy(id, argv[optind + 1]);
 
     // Do the registration
     // -------------------------------------------------------------------------
     char *error;
 
-    if (glite_eds_register(id, cipher, key_size, &error))
+    if (glite_eds_register(argv[optind], cipher, key_size, &error))
     {
         TRACE_ERR((stderr, "Error during glite_eds_register: %s\n", error));
         free(error);
-        if (glite_eds_unregister(id, &error))
+        if (glite_eds_unregister(argv[optind], &error))
         {
             TRACE_ERR((stderr, "Error during glite_eds_unregister: %s\n", error));
             free(error);
         }
         return -1;
+    }
+
+    if(!silent) {
+        fprintf(stdout, "A key has been generated and registered for ID '%s'\n", argv[optind]);
     }
     
     return 0;
