@@ -65,7 +65,7 @@ static char *get_attr_value(glite_catalog_Attribute **attrs, int attrnum,
  * Helper function - convert binary data to hexadecimal format, return is out
  * size or -1 in case of memory allocation error
  */
-static int to_hex(char *in, int insize, char **out)
+static int to_hex(unsigned char *in, int insize, unsigned char **out)
 {
     int i, ret = -1;
     const char hex[] = "0123456789ABCDEF";
@@ -252,15 +252,12 @@ EVP_CIPHER_CTX *glite_eds_init(char *id, char **key, char **iv,
     return ectx;
 }
 
-/**
- * Register a new file in Hydra: create metadata entries (key/iv/...)
- */
-int glite_eds_register(char *id, char *cipher, int keysize,
-    char **error)
+static int _glite_eds_register_common(char *id, char * cipher, int keysize, char *service, 
+    char **key_p, char **iv_p, const EVP_CIPHER **type_p, char **error)
 {
-    char *key, *iv, *cipher_to_use, *hex_key, *hex_iv, *keyl_str;
+    char *cipher_to_use, *keyl_str;
+    unsigned char *hex_key, *hex_iv;
     int keyLength, ivLength;
-    const EVP_CIPHER *type;
 
     /* Do OpenSSL cipher initialization */
     if (!RAND_load_file("/dev/random", 1))
@@ -271,7 +268,7 @@ int glite_eds_register(char *id, char *cipher, int keysize,
     }
     OpenSSL_add_all_ciphers();
     cipher_to_use = (cipher) ? cipher : EDS_DEFAULT_CIPHER;
-    if (0 == (type = EVP_get_cipherbyname(cipher_to_use)))
+    if (0 == ((*type_p) = EVP_get_cipherbyname(cipher_to_use)))
     {
         asprintf(error, "glite_eds_register error: %s",
             ERR_error_string(ERR_get_error(), NULL));
@@ -279,29 +276,29 @@ int glite_eds_register(char *id, char *cipher, int keysize,
     }
 
     /* Initialize encryption key and initialization vector */
-    ivLength = EVP_CIPHER_iv_length(type);
-    keyLength = (keysize) ? (keysize >> 3) : EVP_CIPHER_key_length(type);
-    if (NULL == (iv = (char *)malloc(ivLength)))
+    ivLength = EVP_CIPHER_iv_length(*type_p);
+    keyLength = (keysize) ? (keysize >> 3) : EVP_CIPHER_key_length(*type_p);
+    if (NULL == (*iv_p = (char *)malloc(ivLength)))
     {
         asprintf(error, "glite_eds_register error: malloc() of %d bytes "
             "failed", ivLength);
         return -1;
     }
-    if (NULL == (key = (char *)malloc(keyLength)))
+    if (NULL == (*key_p = (char *)malloc(keyLength)))
     {
         asprintf(error, "glite_eds_register error: malloc() of %d bytes "
             "failed", keyLength);
         return -1;
     }
-    RAND_bytes((char *)key, keyLength);
-    if (keyLength * 2 != to_hex(key, keyLength, &hex_key))
+    RAND_bytes((char *)*key_p, keyLength);
+    if (keyLength * 2 != to_hex(*key_p, keyLength, &hex_key))
     {
         asprintf(error, "glite_eds_register error: converting key to hex "
             "format failed");
         return -1;
     }
-    RAND_pseudo_bytes((char *)iv, ivLength);
-    if (ivLength * 2 != to_hex(iv, ivLength, &hex_iv))
+    RAND_pseudo_bytes((char *)*iv_p, ivLength);
+    if (ivLength * 2 != to_hex(*iv_p, ivLength, &hex_iv))
     {
         asprintf(error, "glite_eds_register error: converting iv to hex "
             "format failed");
@@ -315,19 +312,25 @@ int glite_eds_register(char *id, char *cipher, int keysize,
         return -1;
     }
 
-    /* If id (SURL/GUID) is present, create Fireman Catalog entry
-    if (id)
-    {
-        if (glite_eds_put_fireman(lfn, id, error))
-        {
-            return -1;
-        }
-    }
-    */
-
-    free(iv); free(hex_iv); free(key); free(hex_key); free(keyl_str);
+    free(hex_iv); free(hex_key); free(keyl_str);
     
     return 0;
+}
+
+/**
+ * Register a new file in Hydra: create metadata entries (key/iv/...)
+ */
+int glite_eds_register(char *id, char *cipher, int keysize, char **error)
+{
+    char *key, *iv;
+    const EVP_CIPHER *type;
+    int ret = -1;
+
+    ret = _glite_eds_register_common(id, cipher, keysize, NULL, 
+        &key, &iv, &type, error);
+
+    free(key); free(iv);
+    return ret;
 }
 
 /**
@@ -337,26 +340,15 @@ int glite_eds_register(char *id, char *cipher, int keysize,
 EVP_CIPHER_CTX *glite_eds_register_encrypt_init(char *id,
     char *cipher, int keysize, char **error)
 {
-    char *key, *hex_key, *iv, *hex_iv, *cipher_to_use, *keyl_str;
-    int keyLength, ivLength;
+    char *key, *iv;
     EVP_CIPHER_CTX *ectx;
     const EVP_CIPHER *type;
+    int ret = -1;
 
-    /* Do OpenSSL cipher initialization */
-    if (!RAND_load_file("/dev/random", 1))
-    {
-        asprintf(error, "glite_eds_register_encrypt_init error: %s",
-            ERR_error_string(ERR_get_error(), NULL));
-        return NULL;
-    }
-    OpenSSL_add_all_ciphers();
-    cipher_to_use = (cipher) ? cipher : EDS_DEFAULT_CIPHER;
-    if (0 == (type = EVP_get_cipherbyname(cipher_to_use)))
-    {
-        asprintf(error, "glite_eds_register_encrypt_init error: %s",
-            ERR_error_string(ERR_get_error(), NULL));
-        return NULL;
-    }
+    ret = _glite_eds_register_common(id, cipher, keysize, NULL, 
+        &key, &iv, &type, error);
+
+    if(ret == -1) return NULL;
 
     if (NULL == (ectx = (EVP_CIPHER_CTX *)calloc(1, sizeof(*ectx))))
     {
@@ -365,53 +357,8 @@ EVP_CIPHER_CTX *glite_eds_register_encrypt_init(char *id,
         return NULL;
     }
     EVP_CIPHER_CTX_init(ectx);
-    EVP_EncryptInit(ectx, type, NULL, NULL);
-
-    /* Initialize encryption key and initialization vector */
-    ivLength = EVP_CIPHER_iv_length(type);
-    keyLength = (keysize) ? (keysize >> 3) : EVP_CIPHER_key_length(type);
-    if (NULL == (iv = (char *)malloc(ivLength)))
-    {
-        asprintf(error, "glite_eds_register_encrypt_init error: malloc() of %d "
-            "bytes failed", ivLength);
-        free(ectx);
-        return NULL;
-    }
-    if (NULL == (key = (char *)malloc(keyLength)))
-    {
-        asprintf(error, "glite_eds_register_encrypt_init error: malloc() of %d "
-            "bytes failed", keyLength);
-        free(ectx);
-        return NULL;
-    }
-    RAND_bytes((char *)key, keyLength);
-
-    if (keyLength * 2 != to_hex(key, keyLength, &hex_key))
-    {
-        asprintf(error, "glite_eds_register_encrypt_init error: converting key to hex "
-            "format failed");
-        free(ectx);
-        return NULL;
-    }
-    RAND_pseudo_bytes((char *)iv, ivLength);
-    if (ivLength * 2 != to_hex(iv, ivLength, &hex_iv))
-    {
-        asprintf(error, "glite_eds_register_encrypt_init error: converting iv to hex "
-            "format failed");
-        free(ectx);
-        return NULL;
-    }
-
-    EVP_EncryptInit(ectx, NULL, key, iv);
-
-    /* Do the Metadata Catalog stuff */
-    asprintf(&keyl_str, "%d", keyLength << 3);
-    if (glite_eds_put_metadata(id, hex_key, hex_iv, cipher_to_use, keyl_str, error))
-    {
-        free(ectx);
-        return NULL;
-    }
-    free(keyl_str);
+    EVP_EncryptInit(ectx, type, key, iv);
+    free(key); free(iv);
 
     return ectx;
 }
