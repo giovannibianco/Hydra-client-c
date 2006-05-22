@@ -7,6 +7,7 @@ man1_MANS = \
 		glite-eds-key-register.1 \
 		glite-eds-key-unregister.1 \
 		glite-eds-getacl.1 \
+		glite-eds-chmod.1 \
 		glite-eds-setacl.1
 
 COMMON_XMLFILES = common-gliteio-env.xml

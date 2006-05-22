@@ -6,7 +6,7 @@
  *  GLite Data Catalog - Modify ACL entries
  *
  *  Authors: Gabor Gombas <Gabor.Gombas@cern.ch>
- *  Version info: $Id: eds-setacl.c,v 1.1 2006-04-12 15:56:18 szamsu Exp $ 
+ *  Version info: $Id: eds-setacl.c,v 1.2 2006-05-22 15:17:55 szamsu Exp $ 
  *  Release: $Name: not supported by cvs2svn $
  *
  */
@@ -44,10 +44,10 @@ const char *tool_help =
 	"\t-x ACL\t\tSet exact ACL. May be specified multiple times, but not\n"
 	"\t\t\twith -m or -d\n"
 	"\t-X ENTRY\t\tRead the exact list of ACLs to be set from ENTRY\n"
-	"\t-r\t\tApply ACLs recursively\n";
+	"Syntax of ACL is: principal:[pdrwlxgs]+\n";
 
 /* setacl-specific command line options */
-const char *tool_options = "b:d:D:m:M:rx:X:";
+const char *tool_options = "b:d:D:m:M:x:X:";
 
 /* True if recursion is requested */
 static int rec_flag;
@@ -97,11 +97,8 @@ static int set_acl(glite_catalog_ctx *ctx, const char *item)
 {
 	int changed;
 
-	/* Ignore the second call for recursive traversal */
-/* 	if (direction == GLITE_CATALOG_EXP_POST) */
-/* 		return 0; */
 
-        glite_catalog_Permission *permission = glite_metadata_getPermission(ctx,item);
+    glite_catalog_Permission *permission = glite_metadata_getPermission(ctx,item);
 
 	if (!permission)
 	{
@@ -122,7 +119,7 @@ static int set_acl(glite_catalog_ctx *ctx, const char *item)
 			glite_catalog_Permission_clone(ctx,permission);
 		if (!items[batchcount] || !perms[batchcount])
 		{
-			error("meta-setacl: Out of memory");
+			error("eds-setacl: Out of memory");
 			return -1;
 		}
 		batchcount++;
@@ -141,13 +138,13 @@ int tool_doit(glite_catalog_ctx *ctx, int argc, char *argv[])
 
 	if (!argc)
 	{
-		error("meta-setacl: Missing ITEM");
+		error("eds-setacl: Missing ITEM");
 		return EXIT_FAILURE;
 	}
 
 	if (!actx.mod_acls && !actx.del_acls && !actx.set_acls)
 	{
-		error("meta-setacl: No operations specified");
+		error("eds-setacl: No operations specified");
 		return EXIT_FAILURE;
 	}
 
@@ -158,17 +155,13 @@ int tool_doit(glite_catalog_ctx *ctx, int argc, char *argv[])
 	items = g_new(char *, batch_factor);
 	perms = g_new(glite_catalog_Permission *, batch_factor);
 
-/* 	flags = GLITE_CATALOG_EXP_WITHPERM; */
-/* 	if (rec_flag) */
-/* 		flags |= GLITE_CATALOG_EXP_RECURSIVE; */
-
 	ret = 0;
 	for (i = 0; i < argc; i++)
 	{
 		ret = set_acl(ctx, argv[i]);
 		if (ret)
 		{
-			error("meta-setacl: %s", glite_catalog_get_error(ctx));
+			error("eds-setacl: %s", glite_catalog_get_error(ctx));
 			break;
 		}
 	}
@@ -178,7 +171,7 @@ int tool_doit(glite_catalog_ctx *ctx, int argc, char *argv[])
 	{
 		ret = do_batch(ctx);
 		if (ret)
-			error("meta-setacl: %s", glite_catalog_get_error(ctx));
+			error("eds-setacl: %s", glite_catalog_get_error(ctx));
 	}
 
 	/* Clean up */
@@ -241,9 +234,6 @@ int tool_parse_cmdline(int c, char *opt_arg)
 			}
 			allowed = 0;
 			return read_aclfile(&actx, opt_arg, OP_MODIFY);
-		case 'r':
-			rec_flag++;
-			return 0;
 		case 'x':
 			if (!(allowed & OP_SET))
 			{

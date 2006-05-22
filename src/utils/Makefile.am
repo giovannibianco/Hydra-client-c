@@ -16,6 +16,7 @@ bin_PROGRAMS = glite-eds-get \
 			   glite-eds-key-register \
 			   glite-eds-key-unregister \
 			   glite-eds-setacl \
+			   glite-eds-chmod \
 			   glite-eds-getacl
 
 glite_data_io_client_ldflags   = \
@@ -66,9 +67,13 @@ glite_data_hydra_client_ldflags   = \
 
 glite_eds_setacl_SOURCES  = eds-setacl.c meta-tool-main.c util.c
 
+glite_eds_chmod_SOURCES  = eds-chmod.c meta-tool-main.c util.c
+
 glite_eds_getacl_SOURCES  = eds-getacl.c meta-tool-main.c util.c
 
 glite_eds_setacl_LDADD  = $(glite_data_hydra_client_ldflags)
+
+glite_eds_chmod_LDADD  = $(glite_data_hydra_client_ldflags)
 
 glite_eds_getacl_LDADD  = $(glite_data_hydra_client_ldflags)
 

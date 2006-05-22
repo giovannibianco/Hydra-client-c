@@ -6,7 +6,7 @@
 <!ENTITY common-hydra-env SYSTEM "common-hydra-env.xml">
 ]>
 
-<refentry id="glite-eds-setacl.1" revision="$Revision: 1.1 $">
+<refentry id="glite-eds-setacl.1" revision="$Revision: 1.2 $">
 
 <refentryinfo>
     <!-- These information are shown on the manpage -->
@@ -33,7 +33,7 @@
 <refnamediv>
     <refname>glite-eds-setacl</refname>
     <refpurpose>
-        Modify the ACL of encryption key and optionally encrupted files.
+        Modify the ACL of encryption key and optionally encrypted files.
     </refpurpose>
 </refnamediv>
 

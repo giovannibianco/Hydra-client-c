@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+       	"http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY common-hydra-args SYSTEM "common-hydra-args.xml">
+<!ENTITY common-hydra-arg-desc SYSTEM "common-hydra-arg-desc.xml">
+<!ENTITY common-hydra-env SYSTEM "common-hydra-env.xml">]>
+
+<refentry id="glite-eds-chmod.1" revision="$Revision: 1.1 $">
+
+<refentryinfo>
+    <!-- These information are shown on the manpage -->
+    <author>
+	<firstname>Akos</firstname>
+	<surname>Frohner</surname>
+    </author>
+    <date>May 2006</date>
+    <productname>gLite</productname>
+    <title>gLite Data Management</title>
+
+    <!-- These information are not shown -->
+    <copyright>
+	<year>2006</year>
+	<holder>Members of the EGEE Collaboration</holder>
+    </copyright>
+</refentryinfo>
+
+<refmeta>
+    <refentrytitle>glite-eds-chmod</refentrytitle>
+    <manvolnum>1</manvolnum>
+</refmeta>
+
+<refnamediv>
+    <refname>glite-eds-chmod</refname>
+    <refpurpose>
+        Change the basic permissions of an encryption key and optionall encypted files. 
+    </refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+    <cmdsynopsis>
+	<command>glite-eds-chmod</command>
+	<!-- We use "group" so adding long options later will be easy -->
+
+	&common-hydra-args;
+
+	<group>
+	    <arg choice="plain"><option>-b <replaceable>NUM</replaceable></option></arg>
+	</group>
+	<arg choice="plain"><option><replaceable>MODE</replaceable></option></arg>
+	<arg choice="plain" rep="repeat"><option><replaceable>ID</replaceable></option></arg>
+    </cmdsynopsis>
+</refsynopsisdiv>
+
+<refsect1>
+    <title>DESCRIPTION</title>
+    <para>
+	<command>glite-eds-chmod</command> is a command-line tool for changing
+	basic permissions on encryption keys in the Key Store.
+    </para>
+    <para>
+	<option><replaceable>MODE</replaceable></option> is a list of permission modification
+	descriptions, separated by commas. Each modification description consists of three components:
+	the subject specifier, the operation specifier and the list of permission bits to change.
+    </para>
+    <para>
+        The subject specifier controls whose access to the file or directory will be
+	changed. It is a combination of the letters 'ugoa' meaning the user who owns the file (u),
+	any user in the file's group (g), any other users (o) or everyone (a). Specifying
+	no letters is the same as giving 'a' (everyone).
+    </para>
+    <para>
+	The operation specifier controls how the permission is changed. Exactly one of
+	the symbols '+', '-' or '=' should be specified. Operator '+' causes the permission
+	bits following the operator to be added to the existing permissions. Operator '-'
+	causes the specified permission bits to be cleared. Operator '=' sets the
+	permission to the specified value regardless of the previous permissions on the file.
+    </para>
+    <para>
+	The last part of <option><replaceable>MODE</replaceable></option> contains the
+	new permissions for the affected users:
+    </para>
+    <itemizedlist>
+	    <listitem><para>
+		p - allow to change the permissions
+	    </para></listitem>
+	    <listitem><para>
+		d - delete the entry
+	    </para></listitem>
+	    <listitem><para>
+		r - read the file
+	    </para></listitem>
+	    <listitem><para>
+		w - write to the file
+	    </para></listitem>
+	    <listitem><para>
+		l - list contents
+	    </para></listitem>
+	    <listitem><para>
+		x - execute
+	    </para></listitem>
+	    <listitem><para>
+		g - get the meta data of the file
+	    </para></listitem>
+	    <listitem><para>
+		s - set the meta data of the file
+	    </para></listitem>
+    </itemizedlist>
+</refsect1>
+
+<refsect1>
+    <title>OPTIONS</title>
+    <variablelist>
+
+	&common-hydra-arg-desc;
+
+	<varlistentry>
+	    <term>
+		<group choice="plain">
+		    <arg choice="plain"><option>-b <replaceable>NUM</replaceable></option></arg>
+		</group>
+	    </term>
+
+	    <listitem><para>
+		Set the number of modifications that will be sent in a single batch operation.
+	    </para></listitem>
+	</varlistentry>
+	<varlistentry>
+	    <term><option><replaceable>MODE</replaceable></option></term>
+
+	    <listitem><para>
+		Permissions to change.
+	    </para></listitem>
+	</varlistentry>
+	<varlistentry>
+	    <term><option><replaceable>ID</replaceable></option></term>
+
+	    <listitem>
+            <para>
+                Name of the keys (and files) to list. 
+            </para>
+	    </listitem>
+	</varlistentry>
+    </variablelist>
+</refsect1>
+
+&common-hydra-env;
+
+<refsect1>
+    <title>SEE ALSO</title>
+
+    <para>
+	<citerefentry>
+	    <refentrytitle>glite-eds-setacl</refentrytitle>
+	    <manvolnum>1</manvolnum>
+	</citerefentry>
+    </para>
+</refsect1>
+
+<refsect1>
+    <title>EXAMPLES</title>
+    <variablelist>
+	<varlistentry>
+	    <term><userinput>glite-eds-chmod a+r /foo/bar</userinput></term>
+	    <para>
+		Grants everyone read access to a file named <filename>/foo/bar</filename>.
+		Permission bits other than 'read' are unaffected.
+	    </para>
+	</varlistentry>
+	<varlistentry>
+	    <term><userinput>glite-eds-chmod go-pdwxs,u+ws /foo/bar</userinput></term>
+	    <para>
+		Revokes permission setting, delete, write, execute and metadata modification
+		rights from everyone except the file's owner, and grants write and
+		metadata modification rights to the file's owner.
+	    </para>
+	</varlistentry>
+    </variablelist>
+</refsect1>
+
+</refentry>
+<!-- vim: set ai sw=4: -->
