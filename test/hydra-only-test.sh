@@ -61,7 +61,7 @@ function do_test {
 }
 
 # check for required binaries
-for prog in glite-eds-key-register glite-eds-key-unregister glite-eds-encrypt glite-eds-decrypt uuidgen egrep
+for prog in glite-eds-key-register glite-eds-key-unregister glite-eds-encrypt glite-eds-decrypt uuidgen egrep voms-proxy-info
 do
     if [ ! -x "$(which $prog)" ]; then
         echo "Error: '$prog' not found'" >&2
@@ -174,8 +174,51 @@ function test_acl {
     do_test 'unregistered' glite-eds-key-unregister -v $GUID
 }
 
+function test_1 {
+    echo "#####################################"
+    echo "# Test for #1"
+    echo "#####################################"
+
+    export X509_USER_PROXY=$TEST_CERT_DIR/home/voms01-acme.pem
+    do_test 'registered'  glite-eds-key-register -v $GUID
+
+    do_test "identity  : /C=UG/L=Tropic/O=Utopia/OU=Relaxation/CN=$LOGNAME client01" \
+        voms-proxy-info -all
+    do_test "# User: /C=UG/L=Tropic/O=Utopia/OU=Relaxation/CN=$LOGNAME client01" \
+        glite-eds-getacl -v $GUID
+
+    do_test 'attribute : /org.acme' \
+        voms-proxy-info -all
+    do_test '# Group: /org.acme' \
+        glite-eds-getacl -v $GUID
+
+    do_test 'unregistered' glite-eds-key-unregister -v $GUID
+    export X509_USER_PROXY=$TEST_CERT_DIR/home/voms-acme.pem
+}
+
+function test_2 {
+    echo "#####################################"
+    echo "# Test for #2"
+    echo "#####################################"
+
+    export X509_USER_PROXY=$TEST_CERT_DIR/home/voms01-acme.pem
+    do_test 'registered'  glite-eds-key-register -v $GUID
+
+    do_test "Base perms" \
+        glite-eds-getacl -v $GUID
+
+    do_test 'Changed ACLs' \
+        glite-eds-setacl -v -m a:r $GUID
+    do_test 'Using endpoint' \
+        glite-eds-setacl -v -d a:r $GUID
+
+    do_test 'unregistered' glite-eds-key-unregister -v $GUID
+    export X509_USER_PROXY=$TEST_CERT_DIR/home/voms-acme.pem
+}
+
 #test_encryption
 #test_registration_speed
 #test_encryption_speed
-test_acl
-
+#test_acl
+test_1
+test_2
