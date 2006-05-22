@@ -186,5 +186,11 @@ int main(int argc, char **argv)
     // -------------------------------------------------------------------------
     glite_eds_finalize(ectx, &error);
     
+    if(!silent) {
+        fprintf(stdout, "File '%s' has been succesfully encrypted \n"
+            "\twith key '%s' \n"
+            "\tand written to '%s'.\n", in, id, out);
+    }
+
     return 0;
 }

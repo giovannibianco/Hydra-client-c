@@ -185,6 +185,12 @@ int main(int argc, char **argv)
     // Shut down decryption
     // -------------------------------------------------------------------------
     glite_eds_finalize(dctx, &error);
+
+    if(!silent) {
+        fprintf(stdout, "File '%s' has been succesfully decrypted \n"
+            "\twith key '%s' \n"
+            "\tand written to '%s'.\n", in, id, out);
+    }
     
     return 0;
 }
