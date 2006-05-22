@@ -161,6 +161,16 @@ function test_acl {
         glite-eds-encrypt -v $GUID $tempbase.input $tempbase.encrypted
     export X509_USER_PROXY=$TEST_CERT_DIR/home/voms-acme.pem
 
+    do_test 'Using endpoint' \
+        glite-eds-chmod -v g+r $GUID
+    do_test 'Base perms: user pdrw--gs, group --r-----, other --------' \
+        glite-eds-getacl -v $GUID
+
+    export X509_USER_PROXY=$TEST_CERT_DIR/home/voms01-acme.pem
+    # this should work now
+    do_test 'encrypted' glite-eds-encrypt -v $GUID $tempbase.input $tempbase.encrypted
+    export X509_USER_PROXY=$TEST_CERT_DIR/home/voms-acme.pem
+
     do_test 'unregistered' glite-eds-key-unregister -v $GUID
 }
 
