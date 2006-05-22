@@ -34,11 +34,22 @@ function do_test {
     echo ""
     echo "Command: $@"
     echo "Expected result: $result"
-    $@ | tee $tempbase.stdout | sed -e 's/^/Output: /'
-    #$@ >$tempbase.stdout
-    if [ $? -ne 0 ]; then
-        echo "NOT OK"
-        return 1
+    $@ >$tempbase.stdout 2>&1 
+    ret=$?
+    sed -e 's/^/Output: /' $tempbase.stdout
+    echo "$result" | egrep -qi 'error'
+    if [ $? -eq 0 ]; then
+        # it is expected to fail
+        if [ $ret -eq 0 ]; then
+            echo "NOT OK"
+            return 1
+        fi
+    else
+        # expected to succeed
+        if [ $ret -ne 0 ]; then
+            echo "NOT OK"
+            return 1
+        fi
     fi
     egrep -q "$result" $tempbase.stdout
     if [ $? -ne 0 ]; then
@@ -60,23 +71,24 @@ done
 
 TEST_CERT_DIR=$GLITE_LOCATION/share/test/certificates
 export X509_CERT_DIR=$TEST_CERT_DIR/grid-security/certificates
-export X509_USER_KEY=$TEST_CERT_DIR/home/userkey.pem
-export X509_USER_CERT=$TEST_CERT_DIR/home/usercert.pem
+export X509_USER_PROXY=$TEST_CERT_DIR/home/voms-acme.pem
 export VOMSDIR=$TEST_CERT_DIR/grid-security/vomsdir
 
-
 echo "using cert and key:"
-echo "    export X509_USER_CERT=$X509_USER_CERT"
-echo "    export X509_USER_KEY=$X509_USER_KEY"
+echo "    export X509_USER_PROXY=$X509_USER_PROXY"
 echo "    export X509_CERT_DIR=$X509_CERT_DIR"
 echo "    export VOMSDIR=$VOMSDIR"
 echo ""
-echo "voms-proxy-init using 'changeit' as password"
-echo 'changeit' | voms-proxy-init -pwstdin 
 
 export GLITE_SD_VO='org.example.single'
 export GLITE_SD_PLUGIN='file'
 export GLITE_SD_SERVICES_XML=$(dirname $0)/services.xml
+
+echo "Service-discovery settings:"
+echo "    export GLITE_SD_VO='org.example.single'"
+echo "    export GLITE_SD_PLUGIN='file'"
+echo "    export GLITE_SD_SERVICES_XML=$(dirname $0)/services.xml"
+
 
 GUID=$(uuidgen)
 
@@ -131,10 +143,29 @@ function test_registration_speed {
 }
 
 function test_acl {
+    echo "#####################################"
+    echo "# ACL test with different identities."
+    echo "#####################################"
+
+    do_test 'registered'  glite-eds-key-register -v $GUID
+
+    do_test 'Base perms: user pdrw--gs, group --------, other --------' \
+        glite-eds-getacl -v $GUID
+    echo 'testdata' >$tempbase.input
+    do_test 'encrypted' glite-eds-encrypt -v $GUID $tempbase.input $tempbase.encrypted
+    rm $tempbase.encrypted
+
+    export X509_USER_PROXY=$TEST_CERT_DIR/home/voms01-acme.pem
+    # this one should fail
+    do_test 'Error during glite_eds_encrypt_init' \
+        glite-eds-encrypt -v $GUID $tempbase.input $tempbase.encrypted
+    export X509_USER_PROXY=$TEST_CERT_DIR/home/voms-acme.pem
+
     do_test 'unregistered' glite-eds-key-unregister -v $GUID
 }
 
-test_encryption
-test_registration_speed
-test_encryption_speed
+#test_encryption
+#test_registration_speed
+#test_encryption_speed
+test_acl
 
