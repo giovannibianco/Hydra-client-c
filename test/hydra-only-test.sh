@@ -161,10 +161,10 @@ function test_registration_speed {
     time (for i in $(seq -f '%04g' 1 $ITERATION); do glite-eds-key-unregister $GUID$i; done)
 }
 
-function test_acl {
-    echo "#####################################"
-    echo "# ACL test with different identities."
-    echo "#####################################"
+function test_17024 {
+    echo "##################################################"
+    echo "# Permission test with different identities #17024"
+    echo "##################################################"
 
     do_test 'registered'  glite-eds-key-register -v $GUID
 
@@ -238,9 +238,9 @@ function test_17026 {
 test_17023
 #test_registration_speed
 #test_encryption_speed
-#test_170
-#test_17027
-#test_17026
+test_17024
+test_17027
+test_17026
 
 print_summary
 exit $TEST_BAD
