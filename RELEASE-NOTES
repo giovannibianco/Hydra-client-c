@@ -1,3 +1,20 @@
+*** Release glite-data-hydra-cli_R_2_2_0 2006-05-23
+    
+    o added new CLI tools for key manipulation and encryption:
+            glite-eds-key-register
+            glite-eds-encrypt
+            glite-eds-decrypt
+            glite-eds-key-unregister
+    o added new CLI tools for permission management:
+            glite-eds-chmod
+            glite-eds-getacl
+            glite-eds-setacl
+    o Added a CLI test suite.
+    o Fixed the bin-to-hex routine for key storage: failed in some cases.
+    o Fixed bugs:
+        #17024: EDS: permission manipulation CLI
+        #17023: EDS: I/O independent CLI tools
+
 *** Release glite-data-hydra-cli_R_2_0_0 2005-12-06 pkunszt
 
     o Fixed #14100: hydra-cli: glite-eds-encrypt command
