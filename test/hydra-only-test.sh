@@ -28,36 +28,55 @@ FAILONERROR=${FAILONERROR:-return}
 # iteration number of the performance tests
 ITERATION=${ITERATION:-100}
 
+# test counts
+TEST_ALL=0
+TEST_BAD=0
+TEST_GOOD=0
+
+# should it print intermediate results
+TEST_VERBOSE=${TEST_VERBOSE:-'no'}
+
 function do_test {
     result="$1"
     shift
+    TEST_ALL=$(($TEST_ALL + 1))
     echo ""
     echo "Command: $@"
     echo "Expected result: $result"
     $@ >$tempbase.stdout 2>&1 
     ret=$?
-    sed -e 's/^/Output: /' $tempbase.stdout
+    [ 'yes' = "$TEST_VERBOSE" ] && sed -e 's/^/Output: /' $tempbase.stdout
     echo "$result" | egrep -qi 'error'
     if [ $? -eq 0 ]; then
         # it is expected to fail
         if [ $ret -eq 0 ]; then
+            TEST_BAD=$(($TEST_BAD + 1))
             echo "NOT OK"
             return 1
         fi
     else
         # expected to succeed
         if [ $ret -ne 0 ]; then
+            TEST_BAD=$(($TEST_BAD + 1))
             echo "NOT OK"
             return 1
         fi
     fi
     egrep -q "$result" $tempbase.stdout
     if [ $? -ne 0 ]; then
+        TEST_BAD=$(($TEST_BAD + 1))
         echo "NOT OK"
         $FAILONERROR 2
-    fi
+    fi 
+    TEST_GOOD=$(($TEST_GOOD + 1))
     echo "OK"
     return 0
+}
+
+function print_summary {
+    echo ""
+    echo "Tests run: $TEST_ALL, Success: $TEST_GOOD, Errors: $TEST_BAD"
+    echo $(($TEST_GOOD * 100 / $TEST_ALL))"% success rate"
 }
 
 # check for required binaries
@@ -174,9 +193,9 @@ function test_acl {
     do_test 'unregistered' glite-eds-key-unregister -v $GUID
 }
 
-function test_1 {
+function test_17027 {
     echo "#####################################"
-    echo "# Test for #1"
+    echo "# Test for #17027"
     echo "#####################################"
 
     export X509_USER_PROXY=$TEST_CERT_DIR/home/voms01-acme.pem
@@ -196,9 +215,9 @@ function test_1 {
     export X509_USER_PROXY=$TEST_CERT_DIR/home/voms-acme.pem
 }
 
-function test_2 {
+function test_17026 {
     echo "#####################################"
-    echo "# Test for #2"
+    echo "# Test for #17026"
     echo "#####################################"
 
     export X509_USER_PROXY=$TEST_CERT_DIR/home/voms01-acme.pem
@@ -220,5 +239,8 @@ function test_2 {
 #test_registration_speed
 #test_encryption_speed
 #test_acl
-test_1
-test_2
+test_17027
+test_17026
+
+print_summary
+exit $TEST_BAD
