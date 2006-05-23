@@ -115,10 +115,10 @@ echo "The following service will be used for the test:"
 do_test 'Endpoint: http.*://localhost:8.*/glite-data-hydra-service' \
     glite-sd-query -t org.glite.Metadata
 
-function test_encryption {
-    echo "#############################"
-    echo "# Simple en-de-cryption test."
-    echo "#############################"
+function test_17023 {
+    echo "####################################"
+    echo "# Simple en-de-cryption test, #17023"
+    echo "####################################"
     do_test 'registered'  glite-eds-key-register -v $GUID
 
     echo 'testdata' >$tempbase.input
@@ -235,12 +235,12 @@ function test_17026 {
     export X509_USER_PROXY=$TEST_CERT_DIR/home/voms-acme.pem
 }
 
-#test_encryption
+test_17023
 #test_registration_speed
 #test_encryption_speed
-#test_acl
-test_17027
-test_17026
+#test_170
+#test_17027
+#test_17026
 
 print_summary
 exit $TEST_BAD
