@@ -10,108 +10,19 @@
 #      Akos Frohner <Akos.Frohner@cern.ch>
 #
 
-if [ $(cd .. && basename $PWD) = 'org.glite.data.hydra-cli' -a -d '../build' ]; then
-    export PATH=$(dirname $0)/../build/src/utils/.libs:$PATH
-    export LD_LIBRARY_PATH=$(dirname $0)/../build/src/c/.libs:$LD_LIBRARY_PATH
-else
-    export PATH=$(dirname $0)/../../stage/bin:$PATH
-    export LD_LIBRARY_PATH=$(dirname $0)/../../stage/lib:$LD_LIBRARY_PATH
+TEST_MODULE='org.glite.data.hydra-cli'
+TEST_REQUIRES='glite-eds-key-register glite-eds-key-unregister glite-eds-encrypt glite-eds-decrypt uuidgen voms-proxy-info'
+
+if [ -z "$GLITE_LOCATION" ]; then
+    GLITE_LOCATION=$(dirname $0)/../../stage
 fi
-
-tempbase=$(basename $0)-$$
-trap "rm -rf $tempbase.*" EXIT
-touch $tempstdout
-
-# change it to 'exit' to fail the test
-FAILONERROR=${FAILONERROR:-return}
+source $GLITE_LOCATION/share/test/glite-data-util-c/shunit
 
 # iteration number of the performance tests
 ITERATION=${ITERATION:-100}
 
-# test counts
-TEST_ALL=0
-TEST_BAD=0
-TEST_GOOD=0
-
-# should it print intermediate results
-TEST_VERBOSE=${TEST_VERBOSE:-'no'}
-
-function do_test {
-    result="$1"
-    shift
-    TEST_ALL=$(($TEST_ALL + 1))
-    echo ""
-    echo "Command: $@"
-    echo "Expected result: $result"
-    $@ >$tempbase.stdout 2>&1 
-    ret=$?
-    [ 'yes' = "$TEST_VERBOSE" ] && sed -e 's/^/Output: /' $tempbase.stdout
-    echo "$result" | egrep -qi 'error'
-    if [ $? -eq 0 ]; then
-        # it is expected to fail
-        if [ $ret -eq 0 ]; then
-            TEST_BAD=$(($TEST_BAD + 1))
-            echo "NOT OK"
-            return 1
-        fi
-    else
-        # expected to succeed
-        if [ $ret -ne 0 ]; then
-            TEST_BAD=$(($TEST_BAD + 1))
-            echo "NOT OK"
-            return 1
-        fi
-    fi
-    egrep -q "$result" $tempbase.stdout
-    if [ $? -ne 0 ]; then
-        TEST_BAD=$(($TEST_BAD + 1))
-        echo "NOT OK"
-        $FAILONERROR 2
-    fi 
-    TEST_GOOD=$(($TEST_GOOD + 1))
-    echo "OK"
-    return 0
-}
-
-function print_summary {
-    echo ""
-    echo "Tests run: $TEST_ALL, Success: $TEST_GOOD, Errors: $TEST_BAD"
-    echo $(($TEST_GOOD * 100 / $TEST_ALL))"% success rate"
-}
-
-# check for required binaries
-for prog in glite-eds-key-register glite-eds-key-unregister glite-eds-encrypt glite-eds-decrypt uuidgen egrep voms-proxy-info
-do
-    if [ ! -x "$(which $prog)" ]; then
-        echo "Error: '$prog' not found'" >&2
-        exit
-    fi
-done
-
-TEST_CERT_DIR=$GLITE_LOCATION/share/test/certificates
-export X509_CERT_DIR=$TEST_CERT_DIR/grid-security/certificates
-export X509_USER_PROXY=$TEST_CERT_DIR/home/voms-acme.pem
-export VOMSDIR=$TEST_CERT_DIR/grid-security/vomsdir
-
-echo "using cert and key:"
-echo "    export X509_USER_PROXY=$X509_USER_PROXY"
-echo "    export X509_CERT_DIR=$X509_CERT_DIR"
-echo "    export VOMSDIR=$VOMSDIR"
-echo ""
-
-export GLITE_SD_VO='org.example.single'
-export GLITE_SD_PLUGIN='file'
-export GLITE_SD_SERVICES_XML=$(dirname $0)/services.xml
-
-echo "Service-discovery settings:"
-echo "    export GLITE_SD_VO='org.example.single'"
-echo "    export GLITE_SD_PLUGIN='file'"
-echo "    export GLITE_SD_SERVICES_XML=$(dirname $0)/services.xml"
-
-
 GUID=$(uuidgen)
 
-echo "The following service will be used for the test:"
 do_test 'Endpoint: http.*://localhost:8.*/glite-data-hydra-service' \
     glite-sd-query -t org.glite.Metadata
 
@@ -242,5 +153,4 @@ test_17024
 test_17027
 test_17026
 
-print_summary
-exit $TEST_BAD
+test_summary
