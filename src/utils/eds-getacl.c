@@ -6,7 +6,7 @@
  *  GLite Data Catalog - List ACL entries
  *
  *  Authors: Gabor Gombas <Gabor.Gombas@cern.ch>
- *  Version info: $Id: eds-getacl.c,v 1.1 2006-04-12 15:56:18 szamsu Exp $ 
+ *  Version info: $Id: eds-getacl.c,v 1.2 2006-06-12 09:58:38 szamsu Exp $ 
  *  Release: $Name: not supported by cvs2svn $
  *
  *
@@ -84,7 +84,7 @@ int tool_doit(glite_catalog_ctx *ctx, int argc, char *argv[])
 
 	if (!argc)
 	{
-		error("meta-getacl: Missing ITEM");
+		error("eds-getacl: Missing ITEM");
 		return EXIT_FAILURE;
 	}
 
@@ -98,7 +98,7 @@ int tool_doit(glite_catalog_ctx *ctx, int argc, char *argv[])
 		ret = list_acls(ctx,argv[i]);
 		if (ret)
 		{
-			error("meta-getacl: %s", glite_catalog_get_error(ctx));
+			error("eds-getacl: %s", glite_catalog_get_error(ctx));
 			break;
 		}
 	}
