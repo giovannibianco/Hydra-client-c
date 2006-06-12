@@ -7,7 +7,7 @@
  *
  *  Authors: Gabor Gombas <Gabor.Gombas@cern.ch>
  *           Ricardo Rocha <Ricardo.Rocha@cern.ch>
- *  Version info: $Id: meta-tool-main.c,v 1.1 2006-04-12 15:56:18 szamsu Exp $ 
+ *  Version info: $Id: meta-tool-main.c,v 1.2 2006-06-12 09:42:06 szamsu Exp $ 
  *  Release: $Name: not supported by cvs2svn $
  *
  */
@@ -94,7 +94,7 @@ void error(const char *fmt, ...)
 		if (msg[len + 1] && !strncmp(msg, msg + len + 1, len))
 			memmove(msg, msg + len + 1, strlen(msg) - len);
 	}
-	fprintf(stderr, "%s\n", msg);
+	fprintf(stderr, "ERROR %s\n", msg);
 	fflush(stderr);
 	g_free(msg);
 }
