@@ -20,6 +20,15 @@
     
 <project name="configure options">                                                                        
     <property name="extra.configure.args" value=""/>
-    <property name="configure.args"
-    	value="${extra.configure.args} --with-version=${module.version} --prefix=${stage.abs.dir} --mandir=${prefix}/share/man --with-glite-location=${with.glite.location} --with-dist-location=${with.dist.location} --with-globus-prefix=${with.globus.prefix} --with-globus-thr-flavor=${with.globus.dbg.thr.flavor} --with-globus-nothr-flavor=${with.globus.dbg.nothr.flavor} --with-log4cpp-prefix=${repository}/${ext.log4cpp.subdir}"/>
+    <property name="configure.args" value="${extra.configure.args} 
+--with-version=${module.version} 
+--prefix=${stage.abs.dir}
+--mandir=${prefix}/share/man
+--with-glite-location=${with.glite.location}
+--with-dist-location=${with.dist.location}
+--with-glib2-devel-prefix=${with.glib2-devel.prefix}
+--with-globus-prefix=${with.globus.prefix} 
+--with-globus-thr-flavor=${with.globus.dbg.thr.flavor} 
+--with-globus-nothr-flavor=${with.globus.dbg.nothr.flavor} 
+--with-log4cpp-prefix=${repository}/${ext.log4cpp.subdir}"/>
 </project>
