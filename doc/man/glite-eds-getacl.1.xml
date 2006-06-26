@@ -6,7 +6,7 @@
 <!ENTITY common-hydra-env SYSTEM "common-hydra-env.xml">
 ]>
 
-<refentry id="glite-eds-getacl.1" revision="$Revision: 1.1 $">
+<refentry id="glite-eds-getacl.1" revision="$Revision: 1.2 $">
 
 <refentryinfo>
     <!-- These information are shown on the manpage -->
@@ -42,7 +42,7 @@
 	<command>glite-eds-getacl</command>
 	<!-- We use "group" so adding long options later will be easy -->
 
-	&common-args;
+	&common-hydra-args;
 
 	<arg choice="plain" rep="repeat"><option><replaceable>ID</replaceable></option></arg>
     </cmdsynopsis>
@@ -111,7 +111,7 @@
     <title>OPTIONS</title>
     <variablelist>
 
-	&common-arg-desc;
+	&common-hydra-arg-desc;
 
 	<varlistentry>
 	    <term><option><replaceable>ID</replaceable></option></term>
@@ -125,7 +125,7 @@
     </variablelist>
 </refsect1>
 
-&common-env;
+&common-hydra-env;
 
 <refsect1>
     <title>EXAMPLE</title>
