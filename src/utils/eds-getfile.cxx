@@ -97,8 +97,13 @@ int main(int argc, char* argv[])
         print_usage_and_die(stderr);
     }
 
+    // Get The Logger
+    // -------------------------------------------------------------------------
+    Category& logger = Category::getInstance("glite_get");
+
     // Initialize the io client
     // -------------------------------------------------------------------------
+    logger.log(Priority::INFO,"Initializing IO");
     int initres = glite_io_initialize(service_endpoint, false);
     if (initres < 0) {
         TRACE_ERR((stderr,"Cannot Initialize!\n"));
@@ -131,6 +136,7 @@ int main(int argc, char* argv[])
 
     // Open remote file
     // -------------------------------------------------------------------------
+    logger.log(Priority::INFO,"Open remote file");
     glite_result gl_res;
     glite_handle fh = glite_open(remotefilename,O_RDONLY,0,0,&gl_res);
     if (0 == fh) {
@@ -141,6 +147,7 @@ int main(int argc, char* argv[])
 
     // Initialize eds library
     // -------------------------------------------------------------------------
+    logger.log(Priority::INFO,"Initialize EDS library");
     char *error;
     EVP_CIPHER_CTX *dctx;
 
@@ -172,9 +179,6 @@ int main(int argc, char* argv[])
     // -------------------------------------------------------------------------
     gettimeofday(&abs_start_time,&tz);
 
-    // Get The Logger
-    // -------------------------------------------------------------------------
-    Category& logger = Category::getInstance("glite_get");
     
     logger.log(Priority::INFO,"Start File Transfer");
     
