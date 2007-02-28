@@ -2,7 +2,7 @@
 <!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
        	"http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 
-<refentry id="glite-eds-key-register.1" revision="$Revision: 1.1 $">
+<refentry id="glite-eds-key-register.1" revision="$Revision: 1.2 $">
 
 <refentryinfo>
     <!-- These information are shown on the manpage -->
@@ -67,6 +67,10 @@
         <command>glite-eds-key-register</command> is a command-line tool for 
         generating encryption key and storing it in the Hydra KeyStore. The
         key can be deleted by <command>glite-eds-key-unregister</command>.
+    </para>
+    <para>
+        The client needs to have permission to create new entries inside the Hydra
+        keystore (see 'create_voms_attribute') to perform this operation.
     </para>
 </refsect1>
 

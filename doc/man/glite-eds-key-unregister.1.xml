@@ -2,7 +2,7 @@
 <!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
        	"http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 
-<refentry id="glite-eds-key-unregister.1" revision="$Revision: 1.1 $">
+<refentry id="glite-eds-key-unregister.1" revision="$Revision: 1.2 $">
 
 <refentryinfo>
     <!-- These information are shown on the manpage -->
@@ -62,6 +62,10 @@
         removing the encryption keys from Hydra KeyStore.  If you have other
         copies of files, encrypted with the given key, lying around, you will
         not be able to decrypt them anymore!
+    </para>
+    <para>
+        The client needs to have 'delete entry' (see <command>glite-eds-chmod</command>)
+        permission on the <replaceable>ID</replaceable> to perform this operation.
     </para>
 </refsect1>
 
