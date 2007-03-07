@@ -19,24 +19,21 @@ bin_PROGRAMS = glite-eds-get \
 			   glite-eds-chmod \
 			   glite-eds-getacl
 
-glite_data_io_client_ldflags   = \
-	-L$(GLITE_LOCATION)/lib -lglite_data_io_base -lglite_data_io_client \
-	-lglite_data_catalog_metadata_api_simple_c -lglite_data_catalog_api_simple_c \
-	-lglite_data_catalog_fireman_api_simple_c ../c/libglite_data_eds_simple.la \
-	-lglite_data_util -lglite-sd-c $(GLOBUS_GSS_THR_LIBS) $(GLOBUS_SSL_THR_LIBS) \
-	$(LOG4CPP_LIBS)
+glite_data_io_ldflags   = \
+	-L$(GLITE_LOCATION)/lib -lgfal ../c/libglite_data_eds_simple.la \
+	-lglite_data_util -lglite-sd-c $(GLOBUS_GSS_THR_LIBS) $(GLOBUS_SSL_THR_LIBS)
 
-glite_eds_get_SOURCES = eds-getfile.cxx
+glite_eds_get_SOURCES = eds-getfile.c
 
-glite_eds_put_SOURCES = eds-putfile.cxx
+glite_eds_put_SOURCES = eds-putfile.c
 
-glite_eds_rm_SOURCES  = eds-unlinkfile.cxx
+glite_eds_rm_SOURCES  = eds-unlinkfile.c
 
-glite_eds_get_LDADD = $(glite_data_io_client_ldflags)
+glite_eds_get_LDADD = $(glite_data_io_ldflags)
 
-glite_eds_put_LDADD = $(glite_data_io_client_ldflags)
+glite_eds_put_LDADD = $(glite_data_io_ldflags)
 
-glite_eds_rm_LDADD  = $(glite_data_io_client_ldflags)
+glite_eds_rm_LDADD  = $(glite_data_io_ldflags)
 
 glite_data_eds_client_ldflags   = \
 	-L$(GLITE_LOCATION)/lib ../c/libglite_data_eds_simple.la \
@@ -80,7 +77,6 @@ glite_eds_getacl_LDADD  = $(glite_data_hydra_client_ldflags)
 AM_CPPFLAGS = -I$(top_srcdir)/interface \
 	-I$(top_srcdir)/src \
 	$(GLITE_CFLAGS) \
-	$(LOG4CPP_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	-D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE
 

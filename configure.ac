@@ -18,7 +18,7 @@ AM_INIT_AUTOMAKE([1.6.3 subdir-objects])
 AC_COPYRIGHT([Copyright (c) 2004 The EU EGEE Project
 See LICENCE file for details
 ])
-AC_REVISION([$Revision: 1.7 $])
+AC_REVISION([$Revision: 1.8 $])
 
 #Environment.
 WORKDIR=`pwd`
@@ -27,8 +27,6 @@ AC_SUBST(WORKDIR)
 # Check for the basic compile environment.
 AC_PROG_CC
 AC_PROG_CPP
-AC_PROG_CXX
-AC_PROG_CXXCPP
 AM_PROG_CC_C_O
 AC_PROG_LIBTOOL
 AC_PROG_LN_S
@@ -61,7 +59,7 @@ am_ld_flags="$am_ld_flags"
 AC_ARG_ENABLE(
 	[debug],
 	[  --enable-debug     Produce an executable with debugging symbols],
-	[CXXFLAGS="-g -D_DEBUG $CXXFLAGS"])
+	[CFLAGS="-g -D_DEBUG $CFLAGS"])
 
 ################################################################################
 # Check for available functions.
@@ -80,12 +78,6 @@ AC_MSG_RESULT(["GLOBUS found $have_globus"])
 # Set GLite Properties
 AC_GLITE
 AC_GLITE_VERSION
-
-MAKEDEPEND="\$(CXX) -M"
-
-am_cxx_flags="$am_cxx_flags -I $prefix/include"
-
-AM_PATH_LOG4CPP
 
 # Look for xsltproc & manpage stylesheets
 GLITE_DOCBOOK_MAN

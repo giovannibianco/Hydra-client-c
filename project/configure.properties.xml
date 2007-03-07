@@ -30,5 +30,5 @@
 --with-globus-prefix=${with.globus.prefix} 
 --with-globus-thr-flavor=${with.globus.dbg.thr.flavor} 
 --with-globus-nothr-flavor=${with.globus.dbg.nothr.flavor} 
---with-log4cpp-prefix=${repository}/${ext.log4cpp.subdir}"/>
+"/>
 </project>
