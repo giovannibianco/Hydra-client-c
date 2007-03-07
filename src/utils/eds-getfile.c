@@ -18,16 +18,14 @@
 #include <sys/time.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-#include "log4cpp/Category.hh"
 
 #include <glite/data/hydra/c/eds-simple.h>
-#include <glite/data/io/client/ioclient.h>
-
-using namespace log4cpp;
+#include <gfal_api.h>
 
 #define PROGNAME     "glite-eds-get"
 #define PROGAUTHOR   "(C) EGEE"
@@ -36,6 +34,13 @@ using namespace log4cpp;
 #define TRACE_ERR(a)  fprintf a
 
 #define TRANSFERBLOCKSIZE     10000000
+#define GFAL_LFN_LENGTH		  256
+
+#define TOOL_USER_VERBOSE   "__GLITE_EDS_VERBOSE"
+
+#define true	1
+#define false	0
+
 
 void print_usage_and_die(FILE * out){
     fprintf (out, "\n");
@@ -56,8 +61,8 @@ void print_usage_and_die(FILE * out){
 
 int main(int argc, char* argv[])
 {
-    char   localfilename [GLITE_LFN_LENGTH];
-    char   remotefilename[GLITE_LFN_LENGTH + 7];
+    char   localfilename [GFAL_LFN_LENGTH];
+    char   remotefilename[GFAL_LFN_LENGTH + 7];
 
     struct timeval abs_start_time;
     struct timeval abs_stop_time;
@@ -65,7 +70,7 @@ int main(int argc, char* argv[])
 
     char *id = NULL;
     char *service_endpoint = NULL;
-    bool silent     = false;
+    int silent     = false;
 
     int flag;
     while ((flag = getopt (argc, argv, "qhvs:i:")) != -1) {
@@ -97,33 +102,21 @@ int main(int argc, char* argv[])
         print_usage_and_die(stderr);
     }
 
-    // Get The Logger
-    // -------------------------------------------------------------------------
-    Category& logger = Category::getInstance("glite_get");
-
-    // Initialize the io client
-    // -------------------------------------------------------------------------
-    logger.log(Priority::INFO,"Initializing IO");
-    int initres = glite_io_initialize(service_endpoint, false);
-    if (initres < 0) {
-        TRACE_ERR((stderr,"Cannot Initialize!\n"));
-        return -1;
-    }
 
     // Check if remote file name format:
     //   Must be lfn://<filename> or guid://<guid>
     // TODO
     // -------------------------------------------------------------------------
-    if (strlen(argv[optind]) > GLITE_LFN_LENGTH + 6) {
-        TRACE_ERR((stderr, "Remote filename is too long (more than %d chars)!\n", GLITE_LFN_LENGTH + 6));
+    if (strlen(argv[optind]) > GFAL_LFN_LENGTH + 6) {
+        TRACE_ERR((stderr, "Remote filename is too long (more than %d chars)!\n", GFAL_LFN_LENGTH + 6));
 	return -1;
     }
     strcpy(remotefilename,argv[optind]);
 
     // Copy local file name
     // -------------------------------------------------------------------------
-    if (strlen(argv[optind + 1]) > GLITE_LFN_LENGTH - 1) {
-        TRACE_ERR((stderr, "Local filename is too long (more than %d chars)!\n", GLITE_LFN_LENGTH - 1));
+    if (strlen(argv[optind + 1]) > GFAL_LFN_LENGTH - 1) {
+        TRACE_ERR((stderr, "Local filename is too long (more than %d chars)!\n", GFAL_LFN_LENGTH - 1));
 	return -1;
     }
     strcpy(localfilename ,argv[optind + 1]);
@@ -136,35 +129,28 @@ int main(int argc, char* argv[])
 
     // Open remote file
     // -------------------------------------------------------------------------
-    logger.log(Priority::INFO,"Open remote file");
-    glite_result gl_res;
-    glite_handle fh = glite_open(remotefilename,O_RDONLY,0,0,&gl_res);
-    if (0 == fh) {
-        const char * error_msg = glite_strerror(gl_res);
-        TRACE_ERR((stderr,"Cannot Open Remote File %s. Error is \"%s (code: %d)\"\n",remotefilename,error_msg, gl_res));
-        return -1;
-    }
+    TRACE_LOG((stdout,"Open remote file"));
+    int fh;
+	if ((fh = gfal_open (remotefilename,O_RDONLY, 0)) < 0) {
+		        TRACE_ERR((stderr,"Cannot Open Remote File %s. Error is %s (code: %d)\"\n",remotefilename,strerror(errno),errno));
+		        return -1;
+	}
+	
 
     // Initialize eds library
     // -------------------------------------------------------------------------
-    logger.log(Priority::INFO,"Initialize EDS library");
+    TRACE_LOG((stdout,"Initialize EDS library"));
     char *error;
     EVP_CIPHER_CTX *dctx;
+    char errbuf[256];
 
     if(NULL == id) {
 
-	struct glite_stat stat_buf;
-	glite_int32 result = glite_fstat(fh, &stat_buf);
-	if(0 != result)
-	    {
-		const char * error_msg = glite_strerror(result);
-		TRACE_ERR((stderr, "Cannot Get Remote File Stat. Error is \"%s (code: "
-			   "%d)\"\n",error_msg, result));
-		glite_close(fh);
-		return -1;
-	    } 
-
-	id = stat_buf.guid;
+   	  if((id = guidfromlfn(remotefilename, errbuf, sizeof(errbuf))) == NULL){
+	  	TRACE_ERR((stderr,"Cannot get guid for remote File %s. Error is %s (code: %d)\"\n",remotefilename,errbuf,errno));
+	  	gfal_close(fh);
+	    return (-1);
+   	  }
     }
 
     if (NULL == (dctx = glite_eds_decrypt_init(id, &error)))
@@ -180,19 +166,19 @@ int main(int argc, char* argv[])
     gettimeofday(&abs_start_time,&tz);
 
     
-    logger.log(Priority::INFO,"Start File Transfer");
+    TRACE_LOG((stdout,"Start File Transfer"));
     
     // Get File Status
     // -------------------------------------------------------------------------
-    struct glite_stat stat_buf;
-    int result = glite_fstat(fh,&stat_buf);
-    if(0 != result){
-        const char * error_msg = glite_strerror(result);
-        TRACE_ERR((stderr,"Cannot Get Remote File Stat. Error is \"%s (code: %d)\"\n",error_msg, result));
-        glite_close(fh);
+    struct stat statbuf;
+    int result;
+	if ((result = gfal_stat (remotefilename, &statbuf)) < 0) {
+        TRACE_ERR((stderr,"Cannot Get Remote File Stat. Error is \"%s (code: %d)\"\n",strerror(errno), errno));
+        gfal_close(fh);
         return -1;
     } 
-    long long size = stat_buf.size;
+    
+    long long size = statbuf.st_size;
 
     // Open local file
     // -------------------------------------------------------------------------
@@ -200,7 +186,7 @@ int main(int argc, char* argv[])
     if (fdump < 0) {
         const char * error_msg = strerror(errno);
         TRACE_ERR((stderr,"Cannot Create Local File %s. Error is \"%s (code: %d)\"\n",localfilename, error_msg, errno));
-        glite_close(fh);
+        gfal_close(fh);
         return -1;
     }
 
@@ -210,13 +196,13 @@ int main(int argc, char* argv[])
     // Read Remote File
     // -------------------------------------------------------------------------
     while (bytesread < size) {
-        int nread =  glite_read(fh,buffer,TRANSFERBLOCKSIZE);
+        int nread =  gfal_read(fh,buffer,TRANSFERBLOCKSIZE);
         if (nread <= 0) {
-            const char * error_msg = glite_strerror(nread);
-            TRACE_ERR((stderr,"\nFatal error during remote read. Error is \"%s (code: %d)\"\n",error_msg, nread));
+            
+            TRACE_ERR((stderr,"\nFatal error during remote read. Error is (code: %d)\"\n",nread));
             TRACE_ERR((stderr,"Transfer Finished after %d/%d bytes!\n",bytesread,size));
             close(fdump);
-            glite_close(fh);
+            gfal_close(fh);
             return -1;
         }
 	int dec_buffer_size;
@@ -234,7 +220,7 @@ int main(int argc, char* argv[])
             TRACE_ERR((stderr,"\nFatal error during local write. Error is \"%s (code: %d)\"\n",error_msg, errno));
             TRACE_ERR((stderr,"Transfer Finished after %d/%d bytes!\n",bytesread,size));
             close(fdump);
-            glite_close(fh);
+            gfal_close(fh);
             return -1;
         }
         bytesread += nread;
@@ -244,7 +230,8 @@ int main(int argc, char* argv[])
         if(!silent) {
             char sbasename[1024];
             TRACE_LOG((stdout,"[%s] Total %.02f MB\t|",PROGNAME,(float)size/1024/1024));
-            for (int l=0; l< 20;l++) {
+            int  l;
+            for (l=0; l< 20;l++) {
                 if (l< ( (int)(20.0*bytesread/size))){
                     TRACE_LOG((stdout,"="));
                 }
@@ -279,7 +266,7 @@ int main(int argc, char* argv[])
 		   error));
 	free(error);
         close(fdump);
-        glite_close(fh);
+        gfal_close(fh);
 	return -1;
       }
     if (final_buf_size)
@@ -292,28 +279,35 @@ int main(int argc, char* argv[])
 
     // Close Remote File
     // -------------------------------------------------------------------------
-    result = glite_close(fh);
+    result = gfal_close(fh);
     if(0 != result){
-        const char * error_msg = glite_strerror(result);
+        const char * error_msg = strerror(errno);
         TRACE_ERR((stderr,"WARNING: Error in Closing Remote File. Error is \"%s (code: %d)\"\n",error_msg, result));
     }
     
-    logger.log(Priority::INFO,"File Transfer Completed");
+    TRACE_LOG((stdout,"File Transfer Completed"));
 
     gettimeofday (&abs_stop_time, &tz);
     float abs_time=((float)((abs_stop_time.tv_sec - abs_start_time.tv_sec) *1000 + (abs_stop_time.tv_usec - abs_start_time.tv_usec) / 1000));
     
-    TRACE_LOG((stdout,"\nTransfer Completed:\n\n"));
-    TRACE_LOG((stdout,"  LFN                     : %s  \n",stat_buf.lfn));
-    TRACE_LOG((stdout,"  GUID                    : %s  \n",stat_buf.guid));
-    TRACE_LOG((stdout,"  SURL                    : %s  \n",stat_buf.surl));
-    TRACE_LOG((stdout,"  Data Written [bytes]    : %lld\n",bytesread));
-    if (abs_time!=0) {
-    TRACE_LOG((stdout,"  Eff.Transfer Rate[Mb/s] : %f  \n",bytesread/abs_time/1000.0));
-    }
-    TRACE_LOG((stdout,"\n"));
+    TRACE_LOG((stdout, "\nTransfer Completed:\n\n"));
+    TRACE_LOG((stdout, "  LFN                     : %s  \n", remotefilename));
+    TRACE_LOG((stdout, "  GUID                    : %s  \n", id));
     
-    glite_io_finalize();
+    char **replicas;
+    char **p;
+    if((replicas = surlsfromguid(id, errbuf, sizeof(errbuf))) != NULL) {
+        for(p = replicas; *p != NULL; p++) {
+        	TRACE_LOG((stdout, "  SURL                    : %s  \n", *p));
+        }
+    }
+    TRACE_LOG((stdout, "  Data Written [bytes]    : %lld\n", bytesread));
+    if (abs_time!=0)
+    {
+	TRACE_LOG((stdout, "  Eff.Transfer Rate[Mb/s] : %f  \n",
+		   bytesread / abs_time / 1000.0));
+    }
+    TRACE_LOG((stdout, "\n"));
 
     // Shut down encryption
     // -------------------------------------------------------------------------

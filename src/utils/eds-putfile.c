@@ -18,16 +18,15 @@
 #include <sys/time.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-#include "log4cpp/Category.hh"
 
 #include <glite/data/hydra/c/eds-simple.h>
-#include <glite/data/io/client/ioclient.h>
+#include <gfal_api.h>
 
-using namespace log4cpp;
 
 #define PROGNAME     "glite-eds-put"
 #define PROGAUTHOR   "(C) EGEE"
@@ -36,6 +35,13 @@ using namespace log4cpp;
 #define TRACE_ERR(a)  fprintf a
 
 #define TRANSFERBLOCKSIZE 10000000
+#define GFAL_LFN_LENGTH		  256
+
+#define true	1
+#define false	0
+
+
+#define TOOL_USER_VERBOSE   "__GLITE_EDS_VERBOSE"
 
 void print_usage_and_die(FILE * out){
     fprintf(out, "\n");
@@ -65,9 +71,9 @@ int main(int argc, char **argv)
 {
     int flag, key_size = 0, mode = 0640;
     char *in, *remote, *out, *cipher = NULL;
-    bool silent = false, progbar = false, reg_only = false;
-    char localfilename[GLITE_LFN_LENGTH];
-    char remotefilename[GLITE_LFN_LENGTH + 7];
+    int silent = false, progbar = false, reg_only = false;
+    char localfilename[GFAL_LFN_LENGTH];
+    char remotefilename[GFAL_LFN_LENGTH + 7];
     
     struct timeval abs_start_time;
     struct timeval abs_stop_time;
@@ -128,26 +134,26 @@ int main(int argc, char **argv)
     
     // Initialize the client
     // -------------------------------------------------------------------------
-    int initres = glite_io_initialize(service_endpoint, false);
-    if (initres < 0) {
-        TRACE_ERR((stderr, "Cannot Initialize!\n"));
-        return -1;
-    }       
+//    int initres = glite_io_initialize(service_endpoint, false);
+//    if (initres < 0) {
+//        TRACE_ERR((stderr, "Cannot Initialize!\n"));
+//        return -1;
+//    }       
     
     // Copy Local file name
     // -------------------------------------------------------------------------
-    if (strlen(argv[optind]) > GLITE_LFN_LENGTH-1) {
+    if (strlen(argv[optind]) > GFAL_LFN_LENGTH-1) {
         TRACE_ERR((stderr, "Local filename is too long (more than %d "
-		   "chars)!\n", GLITE_LFN_LENGTH - 1));
+		   "chars)!\n", GFAL_LFN_LENGTH - 1));
 	return -1;
     }
     strcpy(localfilename ,argv[optind]);
     
     // 
     // -------------------------------------------------------------------------
-    if (strlen(argv[optind+1]) > GLITE_LFN_LENGTH + 6) {
+    if (strlen(argv[optind+1]) > GFAL_LFN_LENGTH + 6) {
         TRACE_ERR((stderr, "Remote filename is too long (more than %d "
-		   "chars)!\n", GLITE_LFN_LENGTH + 6));
+		   "chars)!\n", GFAL_LFN_LENGTH + 6));
 	return -1;
     }
     strcpy(remotefilename, argv[optind + 1]);
@@ -189,35 +195,29 @@ int main(int argc, char **argv)
     
     // Open remote file
     // -------------------------------------------------------------------------
-    glite_result gl_res;
-    glite_handle fh = glite_creat(remotefilename, mode, size, &gl_res);
-    if (0 == fh) {
-    	const char * error_msg = glite_strerror(gl_res);
+    int fh;
+	if ((fh = gfal_open (remotefilename, O_WRONLY|O_CREAT, 0644)) < 0) {
+    	const char * error_msg = strerror(errno);
         TRACE_ERR((stderr,"Cannot Create Remote File %s. Error is \"%s (code: "
-		   "%d)\"\n",remotefilename,error_msg, gl_res));
+		   "%d)\"\n",remotefilename,error_msg, errno));
         close(fdump);
         return -1;
-    }
+	}
+
 
     // Initialize eds library
     // -------------------------------------------------------------------------
     char *error;
     EVP_CIPHER_CTX *ectx;
+    char errbuf[256];
 
     if(NULL == id) {
 
-	struct glite_stat stat_buf;
-	result = glite_fstat(fh, &stat_buf);
-	if(0 != result)
-	    {
-		const char * error_msg = glite_strerror(result);
-		TRACE_ERR((stderr, "Cannot Get Remote File Stat. Error is \"%s (code: "
-			   "%d)\"\n",error_msg, result));
-		glite_close(fh);
-		return -1;
-	    } 
-
-	id = stat_buf.guid;
+	if((id = guidfromlfn(remotefilename, errbuf, sizeof(errbuf))) == NULL){
+		TRACE_ERR((stderr,"Cannot get guid for remote File %s. Error is %s (code: %d)\"\n",remotefilename,errbuf,errno));
+		gfal_close(fh);
+		return (-1);
+	  }
     }
     
     if (NULL == (ectx = glite_eds_register_encrypt_init(id,
@@ -227,8 +227,11 @@ int main(int argc, char **argv)
 	TRACE_ERR((stderr, "Error during glite_eds_register_encrypt_init: %s\n",
 		   error));
 	free(error);
-	glite_close(fh);
-	glite_unlink(remotefilename);
+	gfal_close(fh);
+	if(gfal_unlink(remotefilename)<0) {
+		TRACE_ERR((stderr,"Warning: cannot unlink remote file %s. Error is %s (code: %d)\"\n",remotefilename,strerror(errno),errno));
+	}
+		
 	if (glite_eds_unregister(id, &error))
 	{
     	    TRACE_ERR((stderr, "Error during glite_eds_unregister: %s\n",
@@ -240,9 +243,6 @@ int main(int argc, char **argv)
     
     // Get The Logger
     // -------------------------------------------------------------------------
-    Category& logger = Category::getInstance(PROGNAME);
-    
-    logger.log(Priority::INFO, "Start File Transfer");
     
     int counter;
     long long bytesread = 0;
@@ -264,20 +264,23 @@ int main(int argc, char **argv)
 		free(error);
 	    }
             close(fdump);
-            glite_close(fh);
-	    glite_unlink(remotefilename);
+            gfal_close(fh);
+        	if(gfal_unlink(remotefilename)<0) {
+        		TRACE_ERR((stderr,"Warning: cannot unlink remote file %s. Error is %s (code: %d)\"\n",remotefilename,strerror(errno),errno));
+        	}
+
             return -1;
         }
 
 	if(reg_only) {  // don't actually do the encryption
 
-	    int nwrite = glite_write(fh, buffer, nread);
+	    int nwrite = gfal_write(fh, buffer, nread);
 	    if (nwrite != nread) {
-		const char * error_msg = glite_strerror(nwrite);
-		TRACE_ERR((stderr,"\nFatal error during remote write. Error is \"%s (code: %d)\"\n",error_msg, nwrite));
+		const char * error_msg = strerror(errno);
+		TRACE_ERR((stderr,"\nFatal error during remote write. Error is \"%s (code: %d)\"\n",error_msg, errno));
 		TRACE_ERR((stderr,"Transfer Finished after %d/%d bytes!\n",bytesread,size));
 		close(fdump);
-		glite_close(fh);
+		gfal_close(fh);
 		return -1;
 	    }
 	    bytesread += nread;
@@ -299,17 +302,20 @@ int main(int argc, char **argv)
 			    free(error);
 			}
 		    close(fdump);
-		    glite_close(fh);
-		    glite_unlink(remotefilename);
+		    gfal_close(fh);
+			if(gfal_unlink(remotefilename)<0) {
+				TRACE_ERR((stderr,"Warning: cannot unlink remote file %s. Error is %s (code: %d)\"\n",remotefilename,strerror(errno),errno));
+			}
+
 		    return -1;
 		}
         
-	    int nwrite = glite_write(fh, enc_buffer, enc_buffer_size);
+	    int nwrite = gfal_write(fh, enc_buffer, enc_buffer_size);
 	    free(enc_buffer);
 	    if (nwrite != enc_buffer_size) {
-		const char * error_msg = glite_strerror(nwrite);
+		const char * error_msg = strerror(errno);
 		TRACE_ERR((stderr, "\nFatal error during remote write. Error is "
-			   "\"%s (code: %d)\"\n",error_msg, nwrite));
+			   "\"%s (code: %d)\"\n",error_msg, errno));
 		TRACE_ERR((stderr,"Transfer Finished after %d/%d bytes!\n",
 			   bytesread, size));
 		if (glite_eds_unregister(id, &error))
@@ -319,8 +325,11 @@ int main(int argc, char **argv)
 			free(error);
 		    }
 		close(fdump);
-		glite_close(fh);
-		glite_unlink(remotefilename);
+		gfal_close(fh);
+		if(gfal_unlink(remotefilename)<0) {
+			TRACE_ERR((stderr,"Warning: cannot unlink remote file %s. Error is %s (code: %d)\"\n",remotefilename,strerror(errno),errno));
+		}
+
 		return -1;
 	    }
 	    bytesread += nread;
@@ -331,7 +340,8 @@ int main(int argc, char **argv)
         if(!silent) {
             char sbasename[1024];
             TRACE_LOG((stdout,"[%s] Total %.02f MB\t|",PROGNAME,(float)size/1024/1024));
-            for (int l=0; l< 20;l++) {
+            int l;
+            for (l=0; l< 20;l++) {
                 if (l< ( (int)(20.0*bytesread/size))){
                     TRACE_LOG((stdout,"="));
                 }
@@ -375,11 +385,14 @@ int main(int argc, char **argv)
 			free(error);
 		    }
 		close(fdump);
-		glite_close(fh);
-		glite_unlink(remotefilename);
+		gfal_close(fh);
+		if(gfal_unlink(remotefilename)<0) {
+			TRACE_ERR((stderr,"Warning: cannot unlink remote file %s. Error is %s (code: %d)\"\n",remotefilename,strerror(errno),errno));
+		}
+
 		return -1;
 	    }
-	glite_write(fh, final_buf, final_buf_size);
+	gfal_write(fh, final_buf, final_buf_size);
 	free(final_buf);
     }
 
@@ -395,11 +408,11 @@ int main(int argc, char **argv)
     
     // Get File Status
     // -------------------------------------------------------------------------
-    struct glite_stat stat_buf;
-    result = glite_fstat(fh, &stat_buf);
-    if(0 != result)
+    struct stat statbuf;
+    result = gfal_stat(remotefilename,&statbuf);
+    if(result < 0)
     {
-        const char * error_msg = glite_strerror(result);
+        const char * error_msg = strerror(errno);
         TRACE_ERR((stderr, "Cannot Get Remote File Stat. Error is \"%s (code: "
 		   "%d)\"\n",error_msg, result));
 	if (glite_eds_unregister(id, &error))
@@ -408,26 +421,37 @@ int main(int argc, char **argv)
 		       error));
 	    free(error);
 	}
-        glite_close(fh);
-	glite_unlink(remotefilename);
+    gfal_close(fh);
+	if(gfal_unlink(remotefilename)<0) {
+			TRACE_ERR((stderr,"Warning: cannot unlink remote file %s. Error is %s (code: %d)\"\n",remotefilename,strerror(errno),errno));
+		}
+
         return -1;
     }
     
     // Close Remote File
     // -------------------------------------------------------------------------
-    result = glite_close(fh);
+    result = gfal_close(fh);
     if(0 != result){
-        const char * error_msg = glite_strerror(result);
+        const char * error_msg = strerror(errno);
         TRACE_ERR((stderr,"WARNING: Error in Closing Remote File. Error is "
-		   "\"%s (code: %d)\"\n", error_msg, result));
+		   "\"%s (code: %d)\"\n", error_msg, errno));
     }
     
-    logger.log(Priority::INFO, "File Transfer Completed");
+
+    TRACE_LOG((stdout,"File Transfer Completed"));
     
     TRACE_LOG((stdout, "\nTransfer Completed:\n\n"));
-    TRACE_LOG((stdout, "  LFN                     : %s  \n", stat_buf.lfn));
-    TRACE_LOG((stdout, "  GUID                    : %s  \n", stat_buf.guid));
-    TRACE_LOG((stdout, "  SURL                    : %s  \n", stat_buf.surl));
+    TRACE_LOG((stdout, "  LFN                     : %s  \n", remotefilename));
+    TRACE_LOG((stdout, "  GUID                    : %s  \n", id));
+    
+    char **replicas;
+    char **p;
+    if((replicas = surlsfromguid(id, errbuf, sizeof(errbuf))) != NULL) {
+        for(p = replicas; *p != NULL; p++) {
+        	TRACE_LOG((stdout, "  SURL                    : %s  \n", *p));
+        }
+    }
     TRACE_LOG((stdout, "  Data Written [bytes]    : %lld\n", bytesread));
     if (abs_time!=0)
     {
@@ -435,7 +459,7 @@ int main(int argc, char **argv)
 		   bytesread / abs_time / 1000.0));
     }
     TRACE_LOG((stdout, "\n"));
-    glite_io_finalize();
+    
     
     // Shut down encryption
     // -------------------------------------------------------------------------

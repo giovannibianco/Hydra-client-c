@@ -19,19 +19,26 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <string.h>
 #include <unistd.h>
 
-#include "log4cpp/Category.hh"
+
 
 #include <glite/data/hydra/c/eds-simple.h>
-#include <glite/data/io/client/ioclient.h>
-#include <glite/data/io/client/ioerrors.h>
+#include <gfal_api.h>
 
-using namespace log4cpp;
 
 #define PROGNAME     "glite-eds-rm"
 #define PROGAUTHOR   "(C) EGEE"
+
+#define GFAL_LFN_LENGTH		  256
+
+#define TOOL_USER_VERBOSE   "__GLITE_EDS_VERBOSE"
+
+#define true	1
+#define false	0
+
 
 #define TRACE_LOG(a)  if(!silent) fprintf a
 #define TRACE_ERR(a)  fprintf a
@@ -55,7 +62,7 @@ void print_usage_and_die(FILE * out){
 
 int main(int argc, char* argv[]) {
 
-    char   remotefilename[GLITE_LFN_LENGTH + 7];
+    char   remotefilename[GFAL_LFN_LENGTH + 7];
 
     struct timeval abs_start_time;
     struct timeval abs_stop_time;
@@ -63,7 +70,7 @@ int main(int argc, char* argv[]) {
 
     char *id = NULL;
     char *service_endpoint = NULL;
-    bool silent     = false;
+    int silent     = false;
     
     int flag;
     while ((flag = getopt (argc, argv, "qhvi:s:")) != -1) {
@@ -97,18 +104,13 @@ int main(int argc, char* argv[]) {
 
     // Initialize the client
     // -------------------------------------------------------------------------
-    int initres = glite_io_initialize(service_endpoint, false);
-    if (initres < 0) {
-        TRACE_ERR((stderr, "Cannot Initialize!\n"));
-        return -1;
-    }
-
+    
     // Check if remote file name format: 
     //   Must be lfn://<filename> or guid://<guid>
     // TODO
     // -------------------------------------------------------------------------
-    if (strlen(argv[optind]) > GLITE_LFN_LENGTH + 6) {
-        TRACE_ERR((stderr, "Remote filename is too long (more than %d chars)!\n", GLITE_LFN_LENGTH + 6));
+    if (strlen(argv[optind]) > GFAL_LFN_LENGTH + 6) {
+        TRACE_ERR((stderr, "Remote filename is too long (more than %d chars)!\n", GFAL_LFN_LENGTH + 6));
         return -1;
     }
     strcpy(remotefilename,argv[optind]);
@@ -117,28 +119,13 @@ int main(int argc, char* argv[]) {
 
 
     if(NULL == id) {
-        // Open remote file
-        // -------------------------------------------------------------------------
-        glite_result gl_res;
-        glite_handle fh = glite_open(remotefilename,O_RDONLY,0,0,&gl_res);
-        if (0 == fh) {
-            const char * error_msg = glite_strerror(gl_res);
-            TRACE_ERR((stderr,"Cannot Open Remote File %s. Error is \"%s (code: %d)\"\n",remotefilename,error_msg, gl_res));
-            return -1;
-        }
-
-        struct glite_stat stat_buf;
-        glite_int32 result = glite_fstat(fh, &stat_buf);
-        if(0 != result)
-        {
-            const char * error_msg = glite_strerror(result);
-            TRACE_ERR((stderr, "Cannot Get Remote File Stat. Error is \"%s (code: "
-                   "%d)\"\n",error_msg, result));
-            glite_close(fh);
-            return -1;
-        }
-
-        id = stat_buf.guid;
+	// Open remote file
+    // -------------------------------------------------------------------------
+    char errbuf[256];
+	if((id = guidfromlfn(remotefilename, errbuf, sizeof(errbuf))) == NULL){
+		TRACE_ERR((stderr,"Cannot get guid for remote File %s. Error is %s (code: %d)\"\n",remotefilename,errbuf,errno));   	  
+		return (-1);
+	  }
     }
 
     // Unlink entries in Hydra
@@ -153,13 +140,11 @@ int main(int argc, char* argv[]) {
 
     // Unlink remote file
     // -------------------------------------------------------------------------
-    glite_result gl_res = glite_unlink(remotefilename);
-    if (GLITE_IO_SUCCESS != gl_res) {
-        const char * error_msg = glite_strerror(gl_res);
-        TRACE_ERR((stderr, "Cannot Unlink Remote File %s. Error is \"%s (code: %d)\"\n",
-            remotefilename, error_msg, gl_res));
-        return -1;
-    }
+    
+	if(gfal_unlink(remotefilename)<0) {
+		TRACE_ERR((stderr,"Warning: cannot unlink remote file %s. Error is %s (code: %d)\"\n",remotefilename,strerror(errno),errno));
+	}
+
     gettimeofday (&abs_stop_time, &tz);
     float abs_time= ((float)((abs_stop_time.tv_sec - abs_start_time.tv_sec) *1000 
         + (abs_stop_time.tv_usec - abs_start_time.tv_usec) / 1000));
@@ -170,8 +155,7 @@ int main(int argc, char* argv[]) {
         TRACE_LOG((stdout,"  Time [s]      : %f  \n",abs_time/1000.0));
     }
     TRACE_LOG((stdout,"\n"));
-    
-    glite_io_finalize();
+        
     
     return 0;
 }
