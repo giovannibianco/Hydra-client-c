@@ -6,18 +6,16 @@
 #  Runtime Dependencies for the GLite Data IO Client module
 #
 #  Authors: Paolo Badino <paolo.badino@cern.ch>
-#  Version info: $Id: runtime.dependencies,v 1.1.1.1 2005-10-14 15:09:04 zfarkas Exp $
+#  Version info: $Id: runtime.dependencies,v 1.2 2007-04-26 13:10:02 szamsu Exp $
 #  Release: $Name: not supported by cvs2svn $
 #
 #
 
 # GLite Dependencies
 
-org.glite.data.io-base        1.3.0
-org.glite.data.io-client      1.4.0
+GFAL-client
 org.glite.data.util-c         1.1.2
 
 # External Dependencies
 
 globus  2.4.3
-log4cpp 0.3.4b
