@@ -6,7 +6,7 @@
  *  GLite Data Catalog - Main function for the tools
  *
  *  Authors: Gabor Gombas <Gabor.Gombas@cern.ch>
- *  Version info: $Id: tool-main.h,v 1.1 2006-04-12 15:56:18 szamsu Exp $ 
+ *  Version info: $Id: tool-main.h,v 1.2 2007-11-21 10:48:06 szamsu Exp $ 
  *  Release: $Name: not supported by cvs2svn $
  *
  */
@@ -113,9 +113,6 @@ int update_acls(glite_catalog_ctx *ctx, acl_ctx *actx,
 
 void acl_ctx_destroy(acl_ctx *actx);
 
-/* Resolve a symlink recursively */
-int resolve(glite_catalog_ctx *ctx, const char *symlink, char **lfn_out,
-	glite_catalog_LFNStat **stat_out);
 
 /**********************************************************************
  * Global variables exported by the tool

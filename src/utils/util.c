@@ -6,7 +6,7 @@
  *  GLite Data Catalog - Utility functions for the command-line tools
  *
  *  Authors: Gabor Gombas <Gabor.Gombas@cern.ch>
- *  Version info: $Id: util.c,v 1.1 2006-04-12 15:56:18 szamsu Exp $ 
+ *  Version info: $Id: util.c,v 1.2 2007-11-21 10:48:06 szamsu Exp $ 
  *  Release: $Name: not supported by cvs2svn $
  *
  */
@@ -15,7 +15,7 @@
 #include <config.h>
 #endif
 
-#include <glite/data/catalog/fireman/c/fireman-simple.h>
+#include <glite/data/catalog/metadata/c/metadata-simple.h>
 #include <glite/data/glite-util.h>
 
 #include <stdlib.h>
@@ -467,38 +467,3 @@ void acl_ctx_destroy(acl_ctx *actx)
 	}
 }
 
-int resolve(glite_catalog_ctx *ctx, const char *symlink, char **lfn_out,
-	glite_catalog_LFNStat **stat_out)
-{
-	glite_catalog_LFNStat *stat;
-	char *lfn;
-
-	lfn = g_strdup(symlink);
-	for (;;)
-	{
-		stat = glite_fireman_getLFNStat(ctx, lfn);
-		if (!stat)
-		{
-			g_free(lfn);
-			return -1;
-		}
-
-		if (stat->type != GLITE_CATALOG_FTYPE_SYMLINK)
-			break;
-
-		g_free(lfn);
-		lfn = stat->data;
-		stat->data = NULL;
-		glite_catalog_LFNStat_free(ctx, stat);
-	}
-
-	if (lfn_out)
-		*lfn_out = lfn;
-	else
-		g_free(lfn);
-	if (stat_out)
-		*stat_out = stat;
-	else
-		glite_catalog_LFNStat_free(ctx, stat);
-	return 0;
-}

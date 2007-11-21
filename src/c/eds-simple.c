@@ -19,7 +19,6 @@
 #include <openssl/err.h>
 #include <openssl/rand.h>
 #include <glite/data/hydra/c/eds-simple.h>
-//#include <glite/data/catalog/fireman/c/fireman-simple.h>
 #include <glite/data/catalog/metadata/c/metadata-simple.h>
 
 
@@ -542,67 +541,4 @@ int glite_eds_unregister(char *id, char **error)
     return 0;
 }
 
-
-
-/***************
-
-
- * Helper function - register a new file in fireman catalog
-
-
-int glite_eds_put_fireman(char *lfn, char *id, char **error)
-{
-    const char *SURL_prefix = "srm://";
-    glite_catalog_ctx *ctx;
- 
-    if (NULL == (ctx = glite_catalog_new(NULL)))
-    {
-        const char *catalog_err;
-        catalog_err = glite_catalog_get_error(ctx);
-
-        asprintf(error, "glite_eds_put_fireman error: %s", catalog_err);
-        return -1;
-    }
-
-    if (!strncmp(id, SURL_prefix, strlen(SURL_prefix)))
-    {
-        glite_catalog_SURLEntry *surl_entry;
-        glite_catalog_FRCEntry *rentry;
-        
-        surl_entry = glite_catalog_SURLEntry_new(NULL, id, 1);
-        rentry = glite_catalog_FRCEntry_new(ctx, lfn);
-        glite_catalog_FRCEntry_addSurl(ctx, rentry, surl_entry);
-        
-        if (glite_fireman_create(ctx, rentry))
-        {
-            const char *catalog_err;
-            catalog_err = glite_catalog_get_error(ctx);
-            
-            asprintf(error, "glite_eds_put_fireman error: %s", catalog_err);
-            return -1;
-        }
-    }
-    else
-    {
-         glite_catalog_FRCEntry *entry;
-        
-        entry = glite_catalog_FRCEntry_new(ctx, lfn);
-        glite_catalog_FRCEntry_setGuid(ctx, entry, id);
-
-         if (glite_fireman_create(ctx, entry))
-        {
-            const char *catalog_err;
-            catalog_err = glite_catalog_get_error(ctx);
-            
-            asprintf(error, "glite_eds_put_fireman error: %s", catalog_err);
-            return -1;
-        }
-    }
-
-    glite_catalog_free(ctx);
-    
-    return 0;
-}
-
-*/
 
