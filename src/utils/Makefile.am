@@ -22,7 +22,8 @@ bin_PROGRAMS = glite-eds-get \
 glite_data_io_ldflags   = \
 	../c/libglite_data_eds_simple.la \
 	-L$(GLITE_LOCATION)/lib -lgfal -lcgsi_plugin_gsoap_2.7 \
-	-lglite_data_util -lglite-sd-c $(GLOBUS_GSS_THR_LIBS) $(GLOBUS_SSL_THR_LIBS)
+	-lglite_data_util -lgridsite_globus -lglite-sd-c \
+	$(GLOBUS_GSS_THR_LIBS) $(GLOBUS_SSL_THR_LIBS)
 
 glite_eds_get_SOURCES = eds-getfile.c
 
@@ -38,7 +39,8 @@ glite_eds_rm_LDADD  = $(glite_data_io_ldflags)
 
 glite_data_eds_client_ldflags   = \
 	-L$(GLITE_LOCATION)/lib ../c/libglite_data_eds_simple.la \
-	-lglite_data_util -lglite-sd-c $(GLOBUS_GSS_THR_LIBS) $(GLOBUS_SSL_THR_LIBS)
+	-lglite_data_util -lgridsite_globus -lglite-sd-c \
+	$(GLOBUS_GSS_THR_LIBS) $(GLOBUS_SSL_THR_LIBS)
 
 
 glite_eds_encrypt_SOURCES  = eds-encrypt.c
@@ -59,8 +61,9 @@ glite_eds_key_unregister_LDADD  = $(glite_data_eds_client_ldflags)
 
 glite_data_hydra_client_ldflags   = \
 	-L$(GLITE_LOCATION)/lib ../c/libglite_data_eds_simple.la \
-	-lglite_data_catalog_metadata_api_simple_c -lglite_data_catalog_api_simple_c \
-	-lglite_data_util -lglite-sd-c $(GLOBUS_GSS_THR_LIBS) $(GLOBUS_SSL_THR_LIBS) \
+	-lglite_data_catalog_metadata_api_simple_c \
+	-lglite_data_util -lgridsite_globus -lglite-sd-c \
+	$(GLOBUS_GSS_THR_LIBS) $(GLOBUS_SSL_THR_LIBS) \
 	$(GLIB_LIBS)
 
 glite_eds_setacl_SOURCES  = eds-setacl.c meta-tool-main.c util.c
