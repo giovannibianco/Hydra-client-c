@@ -23,7 +23,10 @@ ITERATION=${ITERATION:-100}
 
 GUID=$(uuidgen)
 
-test_success 'Endpoint: http.*://localhost:8.*/glite-data-hydra-service' \
+export GLITE_SD_PLUGIN='file'
+export GLITE_SD_SERVICES_XML=$PWD/services.xml
+
+test_success 'Endpoint: http.*://localhost:8.*/1/glite-data-hydra-service' \
     glite-sd-query -t org.glite.Metadata
 
 function test_17023 {
