@@ -1,3 +1,12 @@
+*** Release glite-data-hydra-cli_R_3_0_0_1 2007-11-23
+
+    o Based on GFAL instead of gLite I/O.
+    o Removed dependencies: glite-data-catalog-api-c, 
+        glite-data-catalog-cli, io-client, log4cpp.
+      Added dependencies: glite-data-catalog-interface, GFAL
+    o Using lib64 on x86_64.
+    o ETICSified.
+
 *** Release glite-data-hydra-cli_R_2_2_0 2006-05-23
     
     o added new CLI tools for key manipulation and encryption:
