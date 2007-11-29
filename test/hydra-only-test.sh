@@ -187,13 +187,15 @@ function test_17027 {
     export X509_USER_PROXY=$TEST_CERT_DIR/home/voms-acme.pem
     test_success 'registered'  glite-eds-key-register -v $GUID
 
-    test_success "identity  : /C=UG/L=Tropic/O=Utopia/OU=Relaxation/CN=$LOGNAME" \
-        voms-proxy-info -all
+    # https://savannah.cern.ch/bugs/?31800
+    test_failure "identity  : /C=UG/L=Tropic/O=Utopia/OU=Relaxation/CN=$LOGNAME" \
+        voms-proxy-info -all 
     test_success "# User: /C=UG/L=Tropic/O=Utopia/OU=Relaxation/CN=$LOGNAME" \
         glite-eds-getacl -v $GUID
 
-    test_success 'attribute : /org.acme' \
-        voms-proxy-info -all
+    # https://savannah.cern.ch/bugs/?31800
+    test_failure 'attribute : /org.acme' \
+        voms-proxy-info -debug -all
     test_success '# Group: /org.acme' \
         glite-eds-getacl -v $GUID
 
