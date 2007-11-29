@@ -5,7 +5,9 @@
 #
 #  src/utils/Makefile.am file for the GLite Encrypted Data Storage module
 #
-#  Authors: Zoltan Farkas <Zoltan.Farkas@cern.ch>
+#  Authors: 
+#  		Akos Frohner <Akos.Frohner@cern.ch>
+#  		Zoltan Farkas <Zoltan.Farkas@cern.ch>
 #  
 
 bin_PROGRAMS = glite-eds-get \
@@ -61,7 +63,6 @@ glite_eds_key_unregister_LDADD  = $(glite_data_eds_client_ldflags)
 
 glite_data_hydra_client_ldflags   = \
 	-L$(GLITE_LOCATION)/lib ../c/libglite_data_eds_simple.la \
-	-lglite_data_catalog_metadata_api_simple_c \
 	-lglite_data_util -lgridsite_globus -lglite-sd-c \
 	$(GLOBUS_GSS_THR_LIBS) $(GLOBUS_SSL_THR_LIBS) \
 	$(GLIB_LIBS)

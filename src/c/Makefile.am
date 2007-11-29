@@ -36,7 +36,6 @@ env.c:
 	echo 'struct Namespace namespaces[] ={{NULL, NULL}}; // autogen' >> $@
 
 # Metadata SOAP library
-INTERFACE_VERSION = 2.0.0
 METADATA_NAMESPACE = metadata
 METADATA_WSDL_FILE = $(GLITE_LOCATION)/interface/org.glite.data-metadata-$(INTERFACE_VERSION).wsdl
 METADATA_SERVICE_H = org.glite.data-metadata-$(INTERFACE_VERSION).h
@@ -81,13 +80,12 @@ AM_CPPFLAGS= \
 	$(CGSI_GSOAP_CFLAGS) \
 	$(GLIB_CFLAGS)
 
-lib_LTLIBRARIES = \
-	libglite_data_eds_simple.la \
-	libglite_data_catalog_metadata_api_simple_c.la
+lib_LTLIBRARIES = libglite_data_eds_simple.la
 
 catalog-simple-api.c datatypes.c soapconv.c internal.h metadata-simple-api.c metadata_soapconv.c metadata_internal.h: metadataStub.h soapdefs.h
 
-libglite_data_catalog_metadata_api_simple_c_la_SOURCES  = \
+libglite_data_eds_simple_la_SOURCES  = \
+	eds-simple.c \
 	catalog-simple-api.c \
 	datatypes.c \
 	soapconv.c \
@@ -99,16 +97,17 @@ libglite_data_catalog_metadata_api_simple_c_la_SOURCES  = \
 	metadataClientLib.c \
 	env.c
 
-libglite_data_catalog_metadata_api_simple_c_la_LIBADD = \
+libglite_data_eds_simple_la_LIBADD = \
 	-L$(GLITE_LOCATION)/lib -lglite_data_util \
+	-lglite-sd-c \
 	$(GLIB_LIBS) 	\
 	$(CGSI_GSOAP_LIBS) \
 	$(GLOBUS_GSS_THR_LIBS)
 
-libglite_data_catalog_metadata_api_simple_c_la_LDFLAGS = \
+libglite_data_eds_simple_la_LDFLAGS = \
 	-version-info $(INTERFACE_LIBTOOL_CURRENT):$(INTERFACE_LIBTOOL_REVISION):$(INTERFACE_LIBTOOL_AGE)
 
-libglite_data_catalog_metadata_api_simple_c_la_CFLAGS = \
+libglite_data_eds_simple_la_CFLAGS = \
 	-I$(top_srcdir)/interface \
 	-I$(top_builddir)/interface \
 	$(GLITE_CFLAGS) \
@@ -117,14 +116,3 @@ libglite_data_catalog_metadata_api_simple_c_la_CFLAGS = \
 	$(GLOBUS_THR_CFLAGS) \
 	-DWITH_SOAPDEFS_H
 
-libglite_data_eds_simple_la_SOURCES  = \
-	eds-simple.c 
-
-libglite_data_eds_simple_la_LIBADD = \
-	libglite_data_catalog_metadata_api_simple_c.la \
-	-L$(GLITE_LOCATION)/lib -lglite_data_util \
-	-lglite-sd-c \
-	$(GLIB_LIBS)
-
-libglite_data_eds_simple_la_LDFLAGS = \
-	-version-info $(INTERFACE_LIBTOOL_CURRENT):$(INTERFACE_LIBTOOL_REVISION):$(INTERFACE_LIBTOOL_AGE)
