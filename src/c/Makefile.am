@@ -100,6 +100,7 @@ libglite_data_eds_simple_la_SOURCES  = \
 libglite_data_eds_simple_la_LIBADD = \
 	-L$(GLITE_LOCATION)/lib -lglite_data_util \
 	-lglite-sd-c \
+	-lglite_security_ssss \
 	$(GLIB_LIBS) 	\
 	$(CGSI_GSOAP_LIBS) \
 	$(GLOBUS_GSS_THR_LIBS)

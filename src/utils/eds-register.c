@@ -42,7 +42,9 @@ static void print_usage_and_die(FILE * out){
     fprintf(out, " Optional parameters:\n");
     fprintf(out, "  -v      : verbose mode\n");
     fprintf(out, "  -q      : quiet mode\n");
+/***
     fprintf(out, "  -s URL  : the Hydra KeyStore to talk to\n");
+***/
     fprintf(out, "  -c name : cipher name to use\n");
     fprintf(out, "  -k n    : key size to use in bits\n");
     fprintf(out, "  -h      : print this screen\n");
@@ -57,9 +59,14 @@ int main(int argc, char **argv)
     int flag, key_size = 0;
     char *cipher = NULL;
     int silent = 0;
+/***
     char *service_endpoint = NULL;
+***/
 
+/***
     while ((flag = getopt (argc, argv, "qhvc:k:s:")) != -1) {
+***/
+    while ((flag = getopt (argc, argv, "qhvc:k:")) != -1) {
         switch (flag) {
             case 'q':
                 silent = 1;
@@ -67,9 +74,11 @@ int main(int argc, char **argv)
             case 'h':
                 print_usage_and_die(stdout);
                 break;
+/***
             case 's':
                 service_endpoint = strdup(optarg);
                 break;
+***/
             case 'v':
                 silent = 0;
                 break;

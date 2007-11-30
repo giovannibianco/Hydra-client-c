@@ -25,6 +25,7 @@ glite_data_io_ldflags   = \
 	../c/libglite_data_eds_simple.la \
 	-L$(GLITE_LOCATION)/lib -lgfal -lcgsi_plugin_gsoap_2.7 \
 	-lglite_data_util -lgridsite_globus -lglite-sd-c \
+	-lglite_security_ssss \
 	$(GLOBUS_GSS_THR_LIBS) $(GLOBUS_SSL_THR_LIBS)
 
 glite_eds_get_SOURCES = eds-getfile.c
