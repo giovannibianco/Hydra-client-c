@@ -6,7 +6,7 @@
  *  GLite Data Catalog - Modify ACL entries
  *
  *  Authors: Gabor Gombas <Gabor.Gombas@cern.ch>
- *  Version info: $Id: eds-setacl.c,v 1.2 2006-05-22 15:17:55 szamsu Exp $ 
+ *  Version info: $Id: eds-setacl.c,v 1.3 2007-11-30 17:47:15 szamsu Exp $ 
  *  Release: $Name: not supported by cvs2svn $
  *
  */
@@ -49,9 +49,6 @@ const char *tool_help =
 /* setacl-specific command line options */
 const char *tool_options = "b:d:D:m:M:x:X:";
 
-/* True if recursion is requested */
-static int rec_flag;
-
 /* Mask of allowed operations */
 static operation_code allowed = OP_DEL | OP_MODIFY | OP_SET;
 
@@ -71,67 +68,82 @@ static unsigned batchcount;
  * Tool implementation
  */
 
-static int do_batch(glite_catalog_ctx *ctx)
+static int do_batch(glite_catalog_ctx_list *ctx_list)
 {
+	int ret = 0;
 	unsigned i;
-	int ret;
 
 	if (!batchcount)
 		return 0;
 
-	ret = glite_metadata_setPermission_multi(ctx, batchcount,
-		(const char **)items, (const glite_catalog_Permission **)perms);
+	for(i = 0; i < (unsigned)ctx_list->count; i++)
+	{
+		ret |= glite_metadata_setPermission_multi(ctx_list->ctx[i], batchcount,
+			(const char **)items, (const glite_catalog_Permission **)perms);
+	}
 
 	for (i = 0; i < batchcount; i++)
 	{
-		if (!ret)
+		if (ret)
+			error("Change failed on %s", items[i]);
+		else
 			info("Changed ACLs on %s", items[i]);
 		g_free(items[i]);
-		glite_catalog_Permission_free(ctx, perms[i]);
+		glite_catalog_Permission_free(NULL, perms[i]);
 	}
 	batchcount = 0;
+
 	return ret;
 }
 
-static int set_acl(glite_catalog_ctx *ctx, const char *item)
+static int set_acl(glite_catalog_ctx_list *ctx_list, const char *item)
 {
+	glite_catalog_Permission *permission;
+	int ret = 0;
 	int changed;
 
+	if (item == NULL) /* flush the queue */
+		return do_batch(ctx_list);
 
-    glite_catalog_Permission *permission = glite_metadata_getPermission(ctx,item);
-
+	/* Use first ctx as primary source, copy this to all the rest */
+	permission = glite_metadata_getPermission(ctx_list->ctx[0],item);
 	if (!permission)
 	{
-		glite_catalog_set_error(ctx,
-			GLITE_CATALOG_ERROR_UNKNOWN,
-			"Missing permission for %s", item);
+		error("Permission missing for %s", item);
 		return -1;
 	}
 
-	changed = update_acls(ctx, &actx, permission);
+	changed = update_acls(ctx_list->ctx[0], &actx, permission);
 	if (changed < 0)
-		return -1;
+	{
+		ret = changed;
+		goto fail;
+	}
 	else if (changed)
 	{
-		/* Write back the permissions but only if there was a change */
+		/* Write back the permissions to all services but only if there was a change */
 		items[batchcount] = g_strdup(item);
 		perms[batchcount] =
-			glite_catalog_Permission_clone(ctx,permission);
+			glite_catalog_Permission_clone(ctx_list->ctx[0],permission);
 		if (!items[batchcount] || !perms[batchcount])
 		{
 			error("eds-setacl: Out of memory");
-			return -1;
+			ret = -1;
+			goto fail;
 		}
 		batchcount++;
 
 		if (batchcount >= batch_factor)
-			return do_batch(ctx);
+			ret = do_batch(ctx_list);
 	}
+
+fail:
+	glite_catalog_Permission_free(NULL, permission);
 
 	return 0;
 }
 
-int tool_doit(glite_catalog_ctx *ctx, int argc, char *argv[])
+int tool_doit(glite_catalog_ctx_list *ctx_list, int argc, char *argv[])
 {
 /* 	glite_catalog_exp_flag flags; */
 	int i, ret;
@@ -155,30 +167,16 @@ int tool_doit(glite_catalog_ctx *ctx, int argc, char *argv[])
 	items = g_new(char *, batch_factor);
 	perms = g_new(glite_catalog_Permission *, batch_factor);
 
-	ret = 0;
-	for (i = 0; i < argc; i++)
+	ret = EXIT_SUCCESS;
+	for (i = 0; i <= argc; i++) /* last one to flush the queue */
 	{
-		ret = set_acl(ctx, argv[i]);
-		if (ret)
-		{
-			error("eds-setacl: %s", glite_catalog_get_error(ctx));
-			break;
-		}
+		char *arg = i < argc ? argv[i] : NULL;
+
+		if (set_acl(ctx_list, arg))
+			ret = EXIT_FAILURE;
 	}
 
-	/* Process the entries still in the queue */
-	if (!ret)
-	{
-		ret = do_batch(ctx);
-		if (ret)
-			error("eds-setacl: %s", glite_catalog_get_error(ctx));
-	}
-
-	/* Clean up */
-	acl_ctx_destroy(&actx);
-	if (ret)
-		return EXIT_FAILURE;
-	return EXIT_SUCCESS;
+	return ret;
 }
 
 /**********************************************************************

@@ -6,7 +6,7 @@
  *  GLite Data Catalog - Utility functions for the command-line tools
  *
  *  Authors: Gabor Gombas <Gabor.Gombas@cern.ch>
- *  Version info: $Id: util.c,v 1.2 2007-11-21 10:48:06 szamsu Exp $ 
+ *  Version info: $Id: util.c,v 1.3 2007-11-30 17:47:15 szamsu Exp $ 
  *  Release: $Name: not supported by cvs2svn $
  *
  */
@@ -17,6 +17,9 @@
 
 #include <glite/data/catalog/metadata/c/metadata-simple.h>
 #include <glite/data/glite-util.h>
+
+#include <glite/data/hydra/c/eds-simple.h>
+#include <glite/data/catalog/metadata/c/metadata-simple.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -465,5 +468,64 @@ void acl_ctx_destroy(acl_ctx *actx)
 		actx->set_acls = g_list_delete_link(actx->set_acls,
 			actx->set_acls);
 	}
+}
+
+/* Write some information about the service */
+int print_service_info(glite_catalog_ctx *ctx)
+{
+	const char *endpoint;
+	char *ver;
+
+	/* this will trigger the initialization */
+	ver = glite_metadata_getVersion(ctx);
+
+	endpoint = glite_catalog_get_endpoint(ctx);
+	if (!endpoint)
+	{
+		error("Failed to determine the endpoint: %s",
+				glite_catalog_get_error(ctx));
+		exit(EXIT_FAILURE);
+	}
+	info("# Using endpoint %s", endpoint);
+
+	if (!ver)
+	{
+		error("Failed to determine the version of the "
+				"service: %s", glite_catalog_get_error(ctx));
+		exit(EXIT_FAILURE);
+	}
+	info("# - service version: %s", ver);
+	free(ver);
+
+	ver = glite_metadata_getInterfaceVersion(ctx);
+	if (!ver)
+	{
+		error("Failed to determine the interface version of "
+				"the service: %s",
+				glite_catalog_get_error(ctx));
+		return -1;
+	}
+	info("# - interface version: %s", ver);
+	free(ver);
+
+	ver = glite_metadata_getSchemaVersion(ctx);
+	if (!ver)
+	{
+		error("Failed to determine the schema version of "
+				"the service: %s",
+				glite_catalog_get_error(ctx));
+		return -1;
+	}
+	info("# - schema version: %s", ver);
+	free(ver);
+
+	ver = glite_metadata_getServiceMetadata(ctx, "feature.string");
+	if (ver)
+	{
+		info("# - service features: %s", ver);
+		free(ver);
+	}
+
+	return 0;
 }
 

@@ -6,7 +6,7 @@
  *  GLite Data Catalog - List ACL entries
  *
  *  Authors: Gabor Gombas <Gabor.Gombas@cern.ch>
- *  Version info: $Id: eds-getacl.c,v 1.2 2006-06-12 09:58:38 szamsu Exp $ 
+ *  Version info: $Id: eds-getacl.c,v 1.3 2007-11-30 17:47:15 szamsu Exp $ 
  *  Release: $Name: not supported by cvs2svn $
  *
  *
@@ -32,14 +32,12 @@
 const char *tool_usage = "ITEM [ITEM...]";
 
 /* Help message */
-const char *tool_help =
-	"\t-r\t\tList ACLs recursively\n";
+const char *tool_help = "";
 
 /* getacl-specific command line options */
-const char *tool_options = "r";
+const char *tool_options = "";
 
 /* True if recursion is requested */
-/*static int rec_flag;*/
 
 /* True if this is not the first entry */
 static int notfirst;
@@ -49,20 +47,65 @@ static int notfirst;
  * Tool implementation
  */
 
-static int list_acls(glite_catalog_ctx *ctx G_GNUC_UNUSED, const char* item)
+/* compare permissions */
+static int cmp_perm(glite_catalog_Permission *a, glite_catalog_Permission *b)
 {
-/* 	/\* Ignore the second call for recursive traversal *\/ */
-/* 	if (direction == GLITE_CATALOG_EXP_POST) */
-/* 		return 0; */
+	unsigned i;
 
-        glite_catalog_Permission *permission = glite_metadata_getPermission(ctx,item);
-
-	if (!permission)
-	{
-		glite_catalog_set_error(ctx,
-			GLITE_CATALOG_ERROR_UNKNOWN,
-			"Missing permission for %s\n", item);
+	if (!a || !b)
 		return -1;
+
+	if (strcmp(a->userName, b->userName) ||
+	    strcmp(a->groupName, b->groupName) ||
+	    (a->userPerm != b->userPerm) ||
+	    (a->groupPerm != b->groupPerm) ||
+	    (a->otherPerm != b->otherPerm) ||
+	    (a->acl_cnt != b->acl_cnt))
+		return -1;
+		
+	/* should be in same order */
+	for (i = 0; i < a->acl_cnt; i++)
+	{
+		glite_catalog_ACLEntry *acl_a = a->acl[i];
+		glite_catalog_ACLEntry *acl_b = b->acl[i];
+
+		if ((acl_a->principalPerm != acl_b->principalPerm) ||
+		    strcmp(acl_a->principal, acl_b->principal))
+			return -1;
+	}
+
+	return 0;
+}
+
+
+static int list_acls(glite_catalog_ctx_list *ctx_list, const char* item)
+{
+	int i;
+	int ret = 0;
+        glite_catalog_Permission *permission_list[ctx_list->count];
+
+	for(i = 0; i < ctx_list->count; i++) 
+		permission_list[i] = glite_metadata_getPermission(ctx_list->ctx[i], item);
+
+	if (!permission_list[0])
+	{
+		error("Missing permission for %s\n", item);
+		ret = -1;
+		goto fail;
+	}
+
+	/* check that all permissions are identical */
+	if (!verbose_flag)
+	{
+		for(i = 1; i < ctx_list->count; i++)
+		{
+			if (cmp_perm(permission_list[0], permission_list[i]))
+			{
+				error("Corrupted permissions for %s\n", item);
+				ret = -1;
+				goto fail;
+			}
+		}
 	}
 
 	/* Print an empty line between entries */
@@ -71,15 +114,31 @@ static int list_acls(glite_catalog_ctx *ctx G_GNUC_UNUSED, const char* item)
 	else
 		notfirst = 1;
 
-	printf("# ENTRY: %s\n", item);
-	print_acls(permission);
+	if (verbose_flag) {
+		for (i = 0; i < ctx_list->count; i++)
+		{
+			printf("# ENTRY: %s\n", item);
+			printf("# ENDPOINT: %s\n", glite_catalog_get_endpoint(ctx_list->ctx[i]));
+			if (permission_list[i])
+				print_acls(permission_list[i]);
+			else
+				printf("# Not exits!!!\n");
+		}
+	} else {
+		printf("# ENTRY: %s\n", item);
+		print_acls(permission_list[0]);
+	}
 
-	return 0;
+fail:
+	for(i = 0; i < ctx_list->count; i++)
+		if (permission_list[i])
+			glite_catalog_Permission_free(NULL, permission_list[i]);
+
+	return ret;
 }
 
-int tool_doit(glite_catalog_ctx *ctx, int argc, char *argv[])
+int tool_doit(glite_catalog_ctx_list *ctx_list, int argc, char *argv[])
 {
-  /*glite_catalog_exp_flag flags;*/
 	int i, ret;
 
 	if (!argc)
@@ -88,24 +147,14 @@ int tool_doit(glite_catalog_ctx *ctx, int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-/* 	flags = GLITE_CATALOG_EXP_WITHPERM; */
-/* 	if (rec_flag) */
-/* 		flags |= GLITE_CATALOG_EXP_RECURSIVE; */
-
-	ret = 0;
+	ret = EXIT_SUCCESS;
 	for (i = 0; i < argc; i++)
 	{
-		ret = list_acls(ctx,argv[i]);
-		if (ret)
-		{
-			error("eds-getacl: %s", glite_catalog_get_error(ctx));
-			break;
-		}
+		if(list_acls(ctx_list,argv[i]))
+			ret = EXIT_FAILURE;
 	}
 
-	if (ret)
-		return EXIT_FAILURE;
-	return EXIT_SUCCESS;
+	return ret;
 }
 
 /**********************************************************************
@@ -117,9 +166,6 @@ int tool_parse_cmdline(int c, char *opt_arg G_GNUC_UNUSED)
 {
 	switch (c)
 	{
-		case 'r':
-		  /*rec_flag++;*/
-			break;
 		default:
 			return -1;
 	}

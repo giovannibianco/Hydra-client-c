@@ -44,7 +44,9 @@ static void print_usage_and_die(FILE * out){
     fprintf(out, " Optional flags:\n");
     fprintf(out, "  -v      : verbose mode\n");
     fprintf(out, "  -q      : quiet mode\n");
+/**
     fprintf(out, "  -s URL  : the Hydra KeyStore to talk to\n");
+**/
     fprintf(out, "  -h      : print this screen\n");
     if(out == stdout){
         exit(0);
@@ -56,7 +58,9 @@ int main(int argc, char **argv)
 {
     int flag;
     char *in, *id, *out;
+/**
     char *service_endpoint = NULL;
+**/
     int silent = 0; // false
 
     while ((flag = getopt(argc, argv, "qhvs:")) != -1) {
@@ -65,9 +69,11 @@ int main(int argc, char **argv)
                 silent = 1; // true
                 unsetenv(TOOL_USER_VERBOSE);
                 break;
+/**
             case 's':
                 service_endpoint = strdup(optarg);
                 break;
+**/
             case 'h':
                 print_usage_and_die(stdout);
                 break;

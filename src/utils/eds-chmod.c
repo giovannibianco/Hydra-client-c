@@ -6,7 +6,7 @@
  *  GLite Data Catalog - Change basic permissions
  *
  *  Authors: Gabor Gombas <Gabor.Gombas@cern.ch>
- *  Version info: $Id: eds-chmod.c,v 1.1 2006-05-22 15:17:55 szamsu Exp $ 
+ *  Version info: $Id: eds-chmod.c,v 1.2 2007-11-30 17:47:15 szamsu Exp $ 
  *  Release: $Name: not supported by cvs2svn $
  *
  *
@@ -55,49 +55,57 @@ static unsigned batchcount;
  * Tool implementation
  */
 
-static int do_batch(glite_catalog_ctx *ctx)
+static int do_batch(glite_catalog_ctx_list *ctx_list)
 {
-	unsigned i;
-	int ret;
+	int ret = 0;
+	int i;
 
 	if (!batchcount)
 		return 0;
 
-	ret = glite_metadata_setPermission_multi(ctx, batchcount,
-		(const char **)items, (const glite_catalog_Permission **)perms);
-
-	for (i = 0; i < batchcount; i++)
+	for(i = 0; i < ctx_list->count; i++)
 	{
-		if (!ret)
+		ret |= glite_metadata_setPermission_multi(ctx_list->ctx[i], batchcount,
+			(const char **)items, (const glite_catalog_Permission **)perms);
+	}
+
+	for (i = 0; i < (int)batchcount; i++)
+	{
+		if (ret)
+			error("Change failed on %s", items[i]);
+		else
 			info("Changed permissions on %s", items[i]);
 		g_free(items[i]);
-		glite_catalog_Permission_free(ctx, perms[i]);
+		glite_catalog_Permission_free(NULL, perms[i]);
 	}
 	batchcount = 0;
+
 	return ret;
 }
 
-static int do_chmod(glite_catalog_ctx *ctx, const char *item)
+/* This cache requests, call item=NULL at the end to flush */
+static int do_chmod(glite_catalog_ctx_list *ctx_list, const char *item)
 {
-	int ret;
+	glite_catalog_Permission *permission;
+	int ret = 0;
 
-    glite_catalog_Permission *permission = glite_metadata_getPermission(ctx,item);
+	if (item == NULL) /* flush the queue */
+		return do_batch(ctx_list);
 
+	/* Use first ctx as primary source, copy this to all the rest */
+	permission = glite_metadata_getPermission(ctx_list->ctx[0],item);
 	if (!permission)
 	{
-		glite_catalog_set_error(ctx,
-			GLITE_CATALOG_ERROR_UNKNOWN,
-			"Missing permission for %s", item);
+		error("Missing permission for %s", item);
 		return -1;
 	}
 
-	ret = apply_modes(permission, cmds);
 	/* Call setPermission() only if there was a change */
-	if (ret)
+	if (apply_modes(permission, cmds))
 	{
 		items[batchcount] = g_strdup(item);
 		perms[batchcount] =
-			glite_catalog_Permission_clone(ctx, permission);
+			glite_catalog_Permission_clone(ctx_list->ctx[0], permission);
 		if (!items[batchcount] || !perms[batchcount])
 		{
 			error("eds-chmod: Out of memory");
@@ -106,14 +114,16 @@ static int do_chmod(glite_catalog_ctx *ctx, const char *item)
 		batchcount++;
 
 		if (batchcount >= batch_factor)
-			return do_batch(ctx);
+			ret = do_batch(ctx_list);
 	}
 
-	return 0;
+	glite_catalog_Permission_free(NULL, permission);
+
+	return ret;
 }
 
 /* Perform an chmod operation */
-int tool_doit(glite_catalog_ctx *ctx, int argc, char *argv[])
+int tool_doit(glite_catalog_ctx_list *ctx_list, int argc, char *argv[])
 {
 	int i, ret;
 
@@ -138,28 +148,16 @@ int tool_doit(glite_catalog_ctx *ctx, int argc, char *argv[])
 	items = g_new(char *, batch_factor);
 	perms = g_new(glite_catalog_Permission *, batch_factor);
 
-	ret = 0;
-	for (i = 1; i < argc; i++)
+	ret = EXIT_SUCCESS;
+	for (i = 1; i <= argc; i++) /* last one to flush the queue */
 	{
-        ret = do_chmod(ctx, argv[i]);
-		if (ret)
-		{
-			error("eds-chmod: %s", glite_catalog_get_error(ctx));
-			break;
-		}
+		char *arg = i < argc ? argv[i] : NULL;
+
+		if(do_chmod(ctx_list, arg))
+			ret = EXIT_FAILURE;
 	}
 
-	/* Process the entries still in the queue */
-	if (!ret)
-	{
-		ret = do_batch(ctx);
-		if (ret)
-			error("eds-chmod: %s", glite_catalog_get_error(ctx));
-	}
-
-	if (ret)
-		return EXIT_FAILURE;
-	return EXIT_SUCCESS;
+	return ret;
 }
 
 /**********************************************************************

@@ -6,7 +6,7 @@
  *  GLite Data Catalog - Main function for the tools
  *
  *  Authors: Gabor Gombas <Gabor.Gombas@cern.ch>
- *  Version info: $Id: tool-main.h,v 1.2 2007-11-21 10:48:06 szamsu Exp $ 
+ *  Version info: $Id: tool-main.h,v 1.3 2007-11-30 17:47:15 szamsu Exp $ 
  *  Release: $Name: not supported by cvs2svn $
  *
  */
@@ -65,6 +65,11 @@ struct _chmod_cmd
 	glite_catalog_Perm		mask;
 };
 
+typedef struct
+{
+	int count;
+	glite_catalog_ctx **ctx;
+} glite_catalog_ctx_list;
 
 /**********************************************************************
  * Prototypes
@@ -74,7 +79,7 @@ struct _chmod_cmd
 int tool_parse_cmdline(int option, char *opt_arg);
 
 /* Perform tool operation */
-int tool_doit(glite_catalog_ctx *ctx, int argc, char *argv[]);
+int tool_doit(glite_catalog_ctx_list *ctx_list, int argc, char *argv[]);
 
 /**********************************************************************
  * Utility functions
@@ -113,6 +118,9 @@ int update_acls(glite_catalog_ctx *ctx, acl_ctx *actx,
 
 void acl_ctx_destroy(acl_ctx *actx);
 
+
+/* Write some information about the service */
+int print_service_info(glite_catalog_ctx *ctx);
 
 /**********************************************************************
  * Global variables exported by the tool

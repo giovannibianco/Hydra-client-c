@@ -44,7 +44,9 @@ static void print_usage_and_die(FILE * out){
     fprintf(out, " Optional flags:\n");
     fprintf(out, "  -v      : verbose mode\n");
     fprintf(out, "  -q      : quiet mode\n");
+/**
     fprintf(out, "  -s URL  : the Hydra KeyStore to talk to\n");
+**/
     fprintf(out, "  -h      : print this screen\n");
     if(out == stdout){
         exit(0);
@@ -98,8 +100,7 @@ int main(int argc, char **argv)
         free(error);
         return -1;
     }
-
-
+    
     // Open input file
     // -------------------------------------------------------------------------
     int in_fd = open(in, O_RDONLY);
@@ -120,15 +121,15 @@ int main(int argc, char **argv)
         return -1;
     }
 
-
     // Do encryption
     // -------------------------------------------------------------------------
     const int in_buf_size = 65536;
     int in_read;
     char *in_buf = (char *)malloc(in_buf_size);
+
     in_read = read(in_fd, in_buf, in_buf_size);
     while (in_read) {
-        if (-1 == in_read)
+        if (in_read < 0)
         {
             const char * error_msg = strerror(errno);
             TRACE_ERR((stderr, "\nFatal error during output write. "

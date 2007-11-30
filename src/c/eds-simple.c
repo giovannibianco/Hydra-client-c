@@ -80,23 +80,25 @@ static char *get_attr_value(glite_catalog_Attribute **attrs, int attrnum,
  */
 static int to_hex(unsigned char *in, int insize, unsigned char **out)
 {
-    int i, ret = -1;
+    int i, len;
     const char hex[] = "0123456789ABCDEF";
     
     if (!out)
-        return ret;
+        return -1;
 
-    if (NULL == (*out = (unsigned char *)calloc(1, insize*2+1)))
-        return ret;
-    ret = insize * 2;
+    len = insize * 2;
+
+    if (NULL == (*out = (unsigned char *)calloc(1, len+1)))
+        return -1;
 
     for (i = 0; i < insize; i++)
     {
         (*out)[i*2] = hex[in[i] >> 4];
         (*out)[i*2+1] = hex[in[i] & 15];
     }
+    (*out)[len] = '\0';
 
-    return ret;
+    return len;
 }
 
 /**
@@ -105,17 +107,19 @@ static int to_hex(unsigned char *in, int insize, unsigned char **out)
  */
 static int to_bin(unsigned char *in, unsigned char **out)
 {
-    int i, ret = -1;
+    int i, len;
     const char hex[] = "0123456789abcdef";
     
     if (!out)
-        return ret;
+        return -1;
 
-    if (NULL == (*out = (unsigned char *)calloc(1, strlen(in)/2)))
-        return ret;
-    ret = strlen(in)/2;
+    len = strlen(in)/2;
 
-    for (i = 0; i < ret; i++)
+    *out = (unsigned char *)calloc(1, len+1);
+    if (!(*out))
+        return -1;
+
+    for (i = 0; i < len; i++)
     {
         char *p;
         p = strchr(hex, (in[i*2] | 0x20)); /* lowercased */
@@ -123,8 +127,9 @@ static int to_bin(unsigned char *in, unsigned char **out)
         p = strchr(hex, (in[i*2+1] | 0x20)); /* lowercased */
         (*out)[i] += (p-hex);
     }
+    (*out)[len] = '\0';
 
-    return ret;
+    return len;
 }
 
 /**
@@ -146,38 +151,44 @@ static int ustrtoi(char * str)
     return res;
 }
 
+/**
+ * Helper function - Free the char* array.
+ */
+static void free_str_list(char **array, int count)
+{
+    int i;
+
+    for(i = 0; i < count; i++)
+        free(array[i]);
+
+    free(array);
+}
 
 /**
- * Helper function - (Re)allocate and initialize key_list.
+ * Helper function - (Re)allocate and initialize char* array.
+ * list is the pointer to the current array (or NULL),
+ * *count is current size of the list (IN/OUT).
  */
-static unsigned char ** realloc_keylist(unsigned char ** list, unsigned int *count,
+static unsigned char ** realloc_str_list(unsigned char ** list, unsigned int *count,
     unsigned int new_count)
 {
-    unsigned int i;
+    int i;
 
     list = realloc(list, sizeof(unsigned char **) * new_count);
     if (!list)
         return NULL;
-    for(i = *count; i < new_count; i++) 
+
+    for(i = *count; i < new_count; i++)
         list[i] = NULL; 
 
     *count = new_count;
     return list;
 }
 
-static void glite_security_ssss_free_keys(unsigned char ** list, unsigned int count) 
-{
-    unsigned int i;
-
-    for(i = 0; i < count; i++)
-        free(list[i]);
-    free(list);
-}
-
 /**
- * Helper function - register datas to the single named metadata catalog
+ * Helper function - register data to the single named metadata catalog
  */
-static int glite_eds_put_metadata_to(SDService * service, char *id,
+static int glite_eds_put_metadata_single(char *endpoint, char *id,
     const struct hydra_data *data, char **error)
 {
     glite_catalog_ctx *ctx;
@@ -195,21 +206,21 @@ static int glite_eds_put_metadata_to(SDService * service, char *id,
     snprintf(keysneeded_str, sizeof(keysneeded_str), "%d", data->keys_needed);
     snprintf(keyindex_str, sizeof(keyindex_str), "%d", data->key_index);
  
-    if (NULL == (ctx = glite_catalog_new(service->endpoint)))
+    if (NULL == (ctx = glite_catalog_new(endpoint)))
     {
-        asprintf(error, "glite_eds_put_metadata_to error (init): %s", glite_catalog_get_error(NULL));
+        asprintf(error, "glite_eds_put_metadata_single error (init): %s", glite_catalog_get_error(NULL));
         return -1;
     }
     if (glite_metadata_createEntry(ctx, id, "eds"))
     {
-        asprintf(error, "glite_eds_put_metadata_to error (createEntry): %s", glite_catalog_get_error(ctx));
+        asprintf(error, "glite_eds_put_metadata_single error (createEntry): %s", glite_catalog_get_error(ctx));
         glite_catalog_free(ctx);
         return -1;
     }
 
     if (glite_metadata_setAttributes(ctx, id, attrs_count, attrs))
     {
-        asprintf(error, "glite_eds_put_metadata_to error (setAttributes): %s", glite_catalog_get_error(ctx));
+        asprintf(error, "glite_eds_put_metadata_single error (setAttributes): %s", glite_catalog_get_error(ctx));
         glite_catalog_free(ctx);
         return -1;
     }
@@ -219,9 +230,9 @@ static int glite_eds_put_metadata_to(SDService * service, char *id,
 }
 
 /**
- * Helper function - get metadata related to the id from the signle named service.
+ * Helper function - get metadata related to the id from the single endpoint.
  */
-static int glite_eds_get_metadata_from(SDService * service, char *id,
+static int glite_eds_get_metadata_single(char *endpoint, char *id,
     struct hydra_data *data, char **error)
 {
     glite_catalog_ctx *ctx;
@@ -233,7 +244,7 @@ static int glite_eds_get_metadata_from(SDService * service, char *id,
     char *keysneeded_str, *keyindex_str;
 
     /* Get Metadata Catalog attributes for the file */
-    ctx = glite_catalog_new(service->endpoint);
+    ctx = glite_catalog_new(endpoint);
     if (!ctx)
     {
         asprintf(error, "glite_eds_init error: %s", glite_catalog_get_error(NULL));
@@ -267,7 +278,7 @@ static int glite_eds_get_metadata_from(SDService * service, char *id,
     /* Check required attributes */
     if (!data->hex_iv || !data->hex_key || !data->keyinfo || 
         !data->cipher || data->keys_needed < 0 || data->key_index < 0) {
-        asprintf(error, "glite_eds_get_metadata_from: required attributes missing");
+        asprintf(error, "glite_eds_get_metadata_single: required attributes missing");
         free(data->hex_iv);
         free(data->hex_key);
         free(data->keyinfo);
@@ -280,20 +291,20 @@ static int glite_eds_get_metadata_from(SDService * service, char *id,
 
 /**
  * Unregister catalog entries in case of error (key/iv)
- * from the named service.
+ * from the single endpoint.
  */
-static int glite_eds_unregister_from(SDService * service, char *id, char **error)
+static int glite_eds_unregister_single(char *endpoint, char *id, char **error)
 {
     glite_catalog_ctx *ctx;
-    if (NULL == (ctx = glite_catalog_new(service->endpoint)))
+    if (NULL == (ctx = glite_catalog_new(endpoint)))
     {
-        asprintf(error, "glite_eds_unregister error: %s", glite_catalog_get_error(NULL));
+        asprintf(error, "glite_eds_unregister_single error: %s", glite_catalog_get_error(NULL));
         return -1;
     }
 
     if (glite_metadata_removeEntry(ctx, id))
     {
-        asprintf(error, "glite_eds_unregister error: %s", glite_catalog_get_error(ctx));
+        asprintf(error, "glite_eds_unregister_single error: %s", glite_catalog_get_error(ctx));
         return -1;
     }
 
@@ -301,20 +312,19 @@ static int glite_eds_unregister_from(SDService * service, char *id, char **error
 }
 
 /**
- * Helper function - get catalog service and all associated services.
- * Use SD_freeServiceList() to free the structure returned.
+ * Get endpoints of default catalog service and all associated services.
+ * User should free the list (or error string) after use.
  */
-static SDServiceList * glite_eds_get_catalog_list(char **error)
+char ** glite_eds_get_catalog_endpoints(int *epcount, char **error)
 {
     SDService *service;
     SDServiceList * serv_list;
     SDException exc;
     const char *sd_type;
     char * serv_name;
-
-#define SET_OWNER(x, owner) \
-        do { const void **__tmp = (const void **)&(x)->_owner; \
-             *__tmp = owner; } while (0)
+    char **endpoints;
+    int associated_count;
+    int i;
 
     sd_type = getenv(GLITE_METADATA_SD_ENV);
     if (!sd_type) sd_type = GLITE_METADATA_SD_TYPE;
@@ -325,41 +335,45 @@ static SDServiceList * glite_eds_get_catalog_list(char **error)
 
     service = SD_getService(serv_name, &exc);
     if (!service) {
-        asprintf(error, "glite_eds_get_catalog_list: %s", exc.reason);
+        asprintf(error, "glite_eds_get_catalog_endpoints: %s", exc.reason);
 	SD_freeException(&exc);
+	free(serv_name);
         return NULL;
     }
 
-    /* Create list of (associated) services */
+    /* Get list of (associated) services.
+     * NULL is returned also in case of numServices=0, that is not the error here.
+     */
     serv_list = SD_listAssociatedServices(serv_name, sd_type, NULL/*site*/, NULL/*vos*/, &exc);
 
-    /* NULL is returned also in case of numServices=0.
-     * We must create the empty list itself. */
-    if (!serv_list) {
-	SD_freeException(&exc);
-	serv_list = malloc(sizeof(SDServiceList));
-	SET_OWNER(serv_list, service->_owner); /* serv_list->_owner = service->_owner; */
-        serv_list->numServices = 0;
-        serv_list->services = NULL;
-        if (!serv_list) {
-            asprintf(error, "glite_eds_get_catalog_list: out of memory");
-            SD_freeService(service);
-            return NULL;
-        }
-    }
+    if (!serv_list)
+	associated_count = 0;
+    else
+        associated_count = serv_list->numServices;
 
-    /* Add origianl service to the serv_list */
-    serv_list->services = realloc(serv_list->services, (serv_list->numServices + 1) * sizeof(SDService*));
-    if (!serv_list->services) {
-        serv_list->numServices = 0;
-        asprintf(error, "glite_eds_get_catalog_list: realloc out of memory");
-        SD_freeServiceList(serv_list);
+    /* Create list of endpoints */
+
+    endpoints = malloc(sizeof(char *) * (1 + associated_count));
+    if (!endpoints) {
         SD_freeService(service);
-        return NULL;
+        SD_freeServiceList(serv_list);
+	free(serv_name);
+        asprintf(error, "glite_eds_get_catalog_endpoints: out of memory");
+	return NULL;
     }
-    serv_list->services[serv_list->numServices++] = service;
 
-    return serv_list;
+    endpoints[0] = strdup(service->endpoint);
+    for (i = 0; i < associated_count; i++) {
+        endpoints[i+1] = strdup(serv_list->services[i]->endpoint);
+    }
+
+    /* free resources */
+    SD_freeService(service);
+    SD_freeServiceList(serv_list);
+    free(serv_name);
+
+    *epcount = 1 + associated_count;
+    return endpoints;
 }
 
 /**
@@ -369,31 +383,31 @@ static SDServiceList * glite_eds_get_catalog_list(char **error)
 static int glite_eds_put_metadata(char *id, char *hex_key, char *hex_iv, char *cipher,
     char *keyinfo, char **error)
 {
-    SDServiceList * serv_list;
+    char **endpoints;
+    int epcount;
     unsigned char ** key_list;
     unsigned int keys_needed;
     int i;
     int err = 0;
 
-    serv_list = glite_eds_get_catalog_list(error);
-    if (!serv_list)
+    endpoints = glite_eds_get_catalog_endpoints(&epcount, error);
+    if (!endpoints)
         return -1;
 
     /* Calculate minimum count of pieces required to reconstruct the original key */
-    keys_needed = serv_list->numServices;
-    if (keys_needed > 3) keys_needed = 3 + keys_needed /5;
-    if (keys_needed > 10) keys_needed = 10;
+    for(keys_needed = 0, i = epcount; i ; i/=2)
+	keys_needed += 1;
 
     /* Split the key by Shamir's Secret Sharing Scheme. */
-    key_list = glite_security_ssss_split_key(hex_key, serv_list->numServices, keys_needed);
+    key_list = glite_security_ssss_split_key(hex_key, epcount, keys_needed);
     if (!key_list) {
         asprintf(error, "glite_eds_put_metadata error: ssss_split failed");
-        SD_freeServiceList(serv_list);
+        free_str_list(endpoints, epcount);
         return -1;
     }
 
     /* Save each key piece to different catalog. */
-    for (i = 0; i < serv_list->numServices; i++) {
+    for (i = 0; i < epcount; i++) {
         const struct hydra_data data = {
             .hex_key = key_list[i],
             .hex_iv = hex_iv,
@@ -401,7 +415,7 @@ static int glite_eds_put_metadata(char *id, char *hex_key, char *hex_iv, char *c
             .keyinfo = keyinfo,
             .keys_needed = keys_needed,
             .key_index = i };
-        err = glite_eds_put_metadata_to(serv_list->services[i], id, &data, error);
+        err = glite_eds_put_metadata_single(endpoints[i], id, &data, error);
         if (err) 
             break;
     }
@@ -409,18 +423,16 @@ static int glite_eds_put_metadata(char *id, char *hex_key, char *hex_iv, char *c
     /* If the storage of any of the key pieces failed, then we
      * should attempt to remove already committed pieces.  */
     if (err) {
-      for(i=i-1; i >= 0; i--) {
+        for(i=i-1; i >= 0; i--) {
            char *dummy_error = NULL;
-           if (glite_eds_unregister_from(serv_list->services[i], id, &dummy_error))
+           if (glite_eds_unregister_single(endpoints[i], id, &dummy_error))
              free(dummy_error);
-      }
+        }
     }
 
     /* cleanup */
-    for(i = 0; i < serv_list->numServices; i++)
-        free(key_list[i]);
-    free(key_list);
-    SD_freeServiceList(serv_list);
+    free_str_list(endpoints, epcount);
+    free_str_list((char**)key_list, epcount);
 
     return err;
 }
@@ -431,43 +443,45 @@ static int glite_eds_put_metadata(char *id, char *hex_key, char *hex_iv, char *c
 static int glite_eds_get_metadata(char *id, char **hex_key, char **hex_iv, char **cipher,
     char **keyinfo, char **error)
 {
-    SDServiceList * serv_list;
+    char **endpoints;
+    int epcount;
     unsigned char ** key_list;
     struct hydra_data data;
     unsigned int keys_needed = 0;
     unsigned int key_shares = 0;
-    unsigned int count = 0;
+    unsigned int keycount = 0;
     char *err;
     int i;
 
-    serv_list = glite_eds_get_catalog_list(error);
-    if (!serv_list)
+    endpoints = glite_eds_get_catalog_endpoints(&epcount, error);
+    if (!endpoints)
         return -1;
 
-    /* default key_shares to numServices. It's possible that original
-     * key_shares is not the same if the number of the services has changed. */
-    key_list = realloc_keylist(NULL, &key_shares, serv_list->numServices);
+    /* default key_shares to numServices. Note: it's possible that it's not
+     * the same as original key_shares if the number of the services has
+     * been changed later! */
+    key_list = realloc_str_list(NULL, &key_shares, epcount);
     if (!key_list) {
         asprintf(error, "glite_eds_get_metadata: out of memory");
-        SD_freeServiceList(serv_list);
+        free_str_list(endpoints, epcount);
         return -1;
     }
 
     /* Fetch each key piece from separate catalog. */
     *error = NULL;
-    for (i = 0; i < serv_list->numServices; i++) {
-        if (glite_eds_get_metadata_from(serv_list->services[i], id, &data, &err)) {
+    for (i = 0; i < epcount; i++) {
+        if (glite_eds_get_metadata_single(endpoints[i], id, &data, &err)) {
 	    /* Keep first error only */
             if (*error == NULL) *error = err;
             else free(err);
         } else {
-            /* Realloc list first if key_index is greater than expected. */
+            /* Realloc list if key_index is greater than expected. */
             if ((unsigned int)data.key_index >= key_shares)
             {
-                key_list = realloc_keylist(key_list, &key_shares, data.key_index);
+                key_list = realloc_str_list(key_list, &key_shares, data.key_index);
                 if (!key_list) {
+                    free_str_list(endpoints, epcount);
                     asprintf(error, "glite_eds_get_metadata: out of memory");
-                    SD_freeServiceList(serv_list);
                     return -1;
                 }
             }
@@ -477,7 +491,7 @@ static int glite_eds_get_metadata(char *id, char **hex_key, char **hex_iv, char 
 
 	    /* Save common data from first entry and
              * make some cross checks for the rest. */
-	    if (!count++) {
+	    if (keycount == 0) {
                 keys_needed = data.keys_needed;
                 *hex_iv = strdup(data.hex_iv);
                 *keyinfo = strdup(data.keyinfo);
@@ -489,8 +503,9 @@ static int glite_eds_get_metadata(char *id, char **hex_key, char **hex_iv, char 
             {
                 free(*error);
                 asprintf(error, "glite_eds_get_metadata: metadata corrupted");
-                keys_needed = 0; /* break */
+                keys_needed = 0; /* break the loop */
             }
+            keycount++;
            
             free(data.hex_iv);
             free(data.hex_key);
@@ -498,17 +513,17 @@ static int glite_eds_get_metadata(char *id, char **hex_key, char **hex_iv, char 
             free(data.cipher);
 
             /* Don't continue if we have enough pieces */
-            if (count >= keys_needed)
+            if (keycount >= keys_needed)
                 break;
         }
     }
 
-    SD_freeServiceList(serv_list);
+    free_str_list(endpoints, epcount);
 
-    if (!keys_needed || count < keys_needed) {
+    if (!keys_needed || keycount < keys_needed) {
         if (*error == NULL) 
             asprintf(error, "glite_eds_get_metadata: failed to get all key pieces");
-        glite_security_ssss_free_keys(key_list, key_shares);
+        free_str_list((char**)key_list, key_shares);
         return -1;
     }
     
@@ -516,7 +531,7 @@ static int glite_eds_get_metadata(char *id, char **hex_key, char **hex_iv, char 
 
     /* Join ssss key pieces */ 
     *hex_key = glite_security_ssss_join_keys(key_list, key_shares);
-    glite_security_ssss_free_keys(key_list, key_shares);
+    free_str_list((char**)key_list, key_shares);
     
     if (! (*hex_key)) {
         asprintf(error, "glite_eds_get_metadata: Error join keys");
@@ -547,21 +562,25 @@ EVP_CIPHER_CTX *glite_eds_init(char *id, char **key, char **iv,
             ERR_error_string(ERR_get_error(), NULL));
         return NULL;
     }
+
     OpenSSL_add_all_ciphers();
-    if (0 == (*type = EVP_get_cipherbyname(cipher_name)))
+
+    *type = EVP_get_cipherbyname(cipher_name);
+    if (!(*type))
     {
         asprintf(error, "glite_eds_init error: %s",
             ERR_error_string(ERR_get_error(), NULL));
         return NULL;
     }
 
-    ectx = (EVP_CIPHER_CTX *)calloc(1, sizeof(*ectx));
+    ectx = (EVP_CIPHER_CTX *)malloc(sizeof(EVP_CIPHER_CTX));
     if (!ectx)
     {
         asprintf(error, "glite_eds_init error: calloc() of %d "
             "bytes failed", sizeof(*ectx));
         return NULL;
     }
+
     EVP_CIPHER_CTX_init(ectx);
 
     free(cipher_name); free(keyinfo); free(hex_key); free(hex_iv);
@@ -673,6 +692,7 @@ EVP_CIPHER_CTX *glite_eds_register_encrypt_init(char *id,
     }
     EVP_CIPHER_CTX_init(ectx);
     EVP_EncryptInit(ectx, type, key, iv);
+
     free(key); free(iv);
 
     return ectx;
@@ -688,12 +708,12 @@ EVP_CIPHER_CTX *glite_eds_encrypt_init(char *id, char **error)
     const EVP_CIPHER *type;
     EVP_CIPHER_CTX *ectx;
     
-    if (NULL == (ectx = glite_eds_init(id, &key, &iv, &type, error)))
-    {
+    ectx = glite_eds_init(id, &key, &iv, &type, error);
+    if (!ectx)
         return NULL;
-    }
 
     EVP_EncryptInit(ectx, type, key, iv);
+    
     free(key); free(iv);
 
     return ectx;
@@ -709,12 +729,12 @@ EVP_CIPHER_CTX *glite_eds_decrypt_init(char *id, char **error)
     const EVP_CIPHER *type;
     EVP_CIPHER_CTX *dctx;
     
-    if (NULL == (dctx = glite_eds_init(id, &key, &iv, &type, error)))
-    {
+    dctx = glite_eds_init(id, &key, &iv, &type, error);
+    if (!dctx)
         return NULL;
-    }
 
     EVP_DecryptInit(dctx, type, key, iv);
+
     free(key); free(iv);
 
     return dctx;
@@ -835,21 +855,21 @@ int glite_eds_finalize(EVP_CIPHER_CTX *ctx, char **error)
  */
 int glite_eds_unregister(char *id, char **error)
 {
-    SDServiceList * serv_list;
+    char **endpoints;
+    int epcount;
     int i;
     int res = 0;
 
-    serv_list = glite_eds_get_catalog_list(error);
-    if (!serv_list) {
+    endpoints = glite_eds_get_catalog_endpoints(&epcount, error);
+    if (!endpoints)
         return -1;
-    }
 
     /* Remove the entry from each catalog. */
-    for (i = 0; i < serv_list->numServices; i++) {
-        res |= glite_eds_unregister_from(serv_list->services[i], id, error);
+    for (i = 0; i < epcount; i++) {
+        res |= glite_eds_unregister_single(endpoints[i], id, error);
     }
 
-    SD_freeServiceList(serv_list);
+    free_str_list(endpoints, epcount);
 
     return res;
 }

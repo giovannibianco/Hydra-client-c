@@ -7,7 +7,7 @@
  *
  *  Authors: Gabor Gombas <Gabor.Gombas@cern.ch>
  *           Ricardo Rocha <Ricardo.Rocha@cern.ch>
- *  Version info: $Id: meta-tool-main.c,v 1.2 2006-06-12 09:42:06 szamsu Exp $ 
+ *  Version info: $Id: meta-tool-main.c,v 1.3 2007-11-30 17:47:15 szamsu Exp $ 
  *  Release: $Name: not supported by cvs2svn $
  *
  */
@@ -16,6 +16,7 @@
 #include <config.h>
 #endif
 
+#include <glite/data/hydra/c/eds-simple.h>
 #include <glite/data/catalog/metadata/c/metadata-simple.h>
 
 #include <getopt.h>
@@ -25,6 +26,7 @@
 
 #include "tool-main.h"
 
+
 /**********************************************************************
  * Global variables
  */
@@ -32,19 +34,20 @@
 /* Location of the Metadata service */
 static char *service_location;
 
-/* Metadata Catalog context handle */
-static glite_catalog_ctx *ctx;
+/* List of Metadata Catalog context handles */
+static glite_catalog_ctx * _ctx[1];
+static glite_catalog_ctx_list ctx_list = { .count=0, .ctx=_ctx };
 
 /* Command line options common to all the tools */
 static const char *common_options = "hqs:vV";
 
 /* Description of the common options */
 static const char *common_help =
-	"\t-h\t\t\tPrint this help text and exit.\n"
-	"\t-q\t\t\tQuiet operation.\n"
-	"\t-s URL\t\tUse the catalog service at the specified URL.\n"
-	"\t-v\t\t\tBe more verbose.\n"
-	"\t-V\t\t\tPrint the version number and exit.\n";
+	"\t-h\t\tPrint this help text and exit.\n"
+	"\t-q\t\tQuiet operation.\n"
+	"\t-s URL\t\tUse the service at the specified URL\n"
+	"\t-v\t\tBe more verbose.\n"
+	"\t-V\t\tPrint the version number and exit.\n";
 
 /* Flag to turn on verbose output */
 int verbose_flag;
@@ -106,7 +109,7 @@ void error(const char *fmt, ...)
 int main(int argc, char *argv[])
 {
 	char *options, *prog_name;
-	int optlen, ret, c;
+	int optlen, ret, c, i;
 
 	/* Determine the program name we were called as */
 	prog_name = strrchr(argv[0], '/');
@@ -180,74 +183,71 @@ int main(int argc, char *argv[])
 	argc -= optind;
 	argv += optind;
 
-	/* Allocate a Metadata Catalog context */
-	ctx = glite_catalog_new(service_location);
-	if (!ctx)
+	if (service_location) 
 	{
-		error("Failed to allocate the Metadata Catalog context");
-		exit(EXIT_FAILURE);
+		ctx_list.count = 1;
+		ctx_list.ctx[0] = glite_catalog_new(service_location);
+		if(!ctx_list.ctx[0]) {
+			error("Failed to allocate the Metadata Catalog context: %s",
+				service_location);
+			exit(EXIT_FAILURE);
+		}
+	}
+	else
+	{
+		/* Find endpoint for each of default services */
+        	char **endpoints;
+		char *errstr;
+
+		endpoints = glite_eds_get_catalog_endpoints(&ctx_list.count, &errstr);
+		if (!endpoints) 
+		{
+			fprintf(stderr, errstr);
+			exit(EXIT_FAILURE);
+		}
+
+		ctx_list.ctx = malloc(sizeof(glite_catalog_ctx *) * ctx_list.count);
+		if (!ctx_list.ctx)
+		{
+			error("out of memory");
+			exit(EXIT_FAILURE);
+		}
+
+		/* Allocate a Metadata Catalog context for each service */
+		for(i = 0; i < ctx_list.count; i++) 
+		{
+			ctx_list.ctx[i] = glite_catalog_new(endpoints[i]);
+			if (!ctx_list.ctx[i])
+			{
+				error("Failed to allocate the Metadata Catalog context: %s",
+					endpoints[i]);
+				exit(EXIT_FAILURE);
+			}
+		}
+
+		// free_list(endpoints, ctx_list.count); 
+		for(i = 0; i < ctx_list.count; i++)
+			free(endpoints[i]);
+		free(endpoints);
 	}
 
+
+	/* Write some information about services */
 	if (verbose_flag)
 	{
-		const char *endpoint;
-		char *ver;
-
-        /* this will trigger the initialization */
-		ver = glite_metadata_getVersion(ctx);
-
-		endpoint = glite_catalog_get_endpoint(ctx);
-		if (!endpoint)
+		for(i = 0; i < ctx_list.count; i++) 
 		{
-			error("Failed to determine the endpoint: %s",
-				glite_catalog_get_error(ctx));
-			exit(EXIT_FAILURE);
-		}
-		info("# Using endpoint %s", endpoint);
-
-		if (!ver)
-		{
-			error("Failed to determine the version of the "
-				"service: %s", glite_catalog_get_error(ctx));
-			exit(EXIT_FAILURE);
-		}
-		info("# Service version: %s", ver);
-		free(ver);
-
-		ver = glite_metadata_getInterfaceVersion(ctx);
-		if (!ver)
-		{
-			error("Failed to determine the interface version of "
-				"the service: %s",
-				glite_catalog_get_error(ctx));
-			exit(EXIT_FAILURE);
-		}
-		info("# Interface version: %s", ver);
-		free(ver);
-
-		ver = glite_metadata_getSchemaVersion(ctx);
-		if (!ver)
-		{
-			error("Failed to determine the schema version of "
-				"the service: %s",
-				glite_catalog_get_error(ctx));
-			exit(EXIT_FAILURE);
-		}
-		info("# Schema version: %s", ver);
-		free(ver);
-
-		ver = glite_metadata_getServiceMetadata(ctx, "feature.string");
-		if (ver)
-		{
-			info("# Service features: %s", ver);
-			free(ver);
+			if (print_service_info(ctx_list.ctx[i]))
+				exit(EXIT_FAILURE);
 		}
 	}
 
 	/* Perform the operation */
-	ret = tool_doit(ctx, argc, argv);
+	ret = tool_doit(&ctx_list, argc, argv);
 
-	/* Clean up properly so checking for memory leaks is easier */
-	glite_catalog_free(ctx);
+	/* Cleanup */
+	for(i = 0; i < ctx_list.count; i++)
+		glite_catalog_free(ctx_list.ctx[i]);
+
 	return ret;
 }

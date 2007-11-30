@@ -20,6 +20,18 @@
 extern "C" {
 #endif
 
+/**
+ * Get endpoints of default catalog service and all associated services.
+ * 
+ * @param count [OUT] count of returned endpoints.
+ * @param error [OUT] Pointer to the error string. 
+ *
+ * @return list of endpoints.
+ * The caller is responsible for freeing the allocated structure.
+ * In error cases the NULL is returned and *error contains the error string.
+ * The caller is responsible for freeing the allocated error string.
+ */
+char ** glite_eds_get_catalog_endpoints(int *count, char **error);
 
 /**
  * Register a new file in Hydra: create key entries (key/iv/...)
