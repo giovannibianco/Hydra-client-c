@@ -6,7 +6,7 @@
  *  GLite Data Catalog - Modify ACL entries
  *
  *  Authors: Gabor Gombas <Gabor.Gombas@cern.ch>
- *  Version info: $Id: eds-setacl.c,v 1.3 2007-11-30 17:47:15 szamsu Exp $ 
+ *  Version info: $Id: eds-setacl.c,v 1.4 2007-12-02 23:55:51 szamsu Exp $ 
  *  Release: $Name: not supported by cvs2svn $
  *
  */
@@ -109,7 +109,7 @@ static int set_acl(glite_catalog_ctx_list *ctx_list, const char *item)
 	permission = glite_metadata_getPermission(ctx_list->ctx[0],item);
 	if (!permission)
 	{
-		error("Permission missing for %s", item);
+		error("Missing permission for %s", item);
 		return -1;
 	}
 
