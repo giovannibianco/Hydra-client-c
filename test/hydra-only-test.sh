@@ -223,7 +223,7 @@ function test_setPermission_checkPermission {
 
     export X509_USER_PROXY=$TEST_CERT_DIR/home/user02-voms.pem
     echo "export X509_USER_PROXY=$TEST_CERT_DIR/home/user02-voms.pem"
-    test_failure 'ERROR eds-setacl' \
+    test_failure 'ERROR Missing permission' \
         glite-eds-setacl -v -m "${user02dn:9}:g" $GUID
 
     export X509_USER_PROXY=$TEST_CERT_DIR/home/voms-acme.pem
@@ -249,7 +249,7 @@ function test_getPermission_checkPermission {
 
     export X509_USER_PROXY=$TEST_CERT_DIR/home/user02-voms.pem
     echo "export X509_USER_PROXY=$TEST_CERT_DIR/home/user02-voms.pem"
-    test_failure 'ERROR eds-getacl' glite-eds-getacl -v $GUID
+    test_failure 'ERROR Missing permission' glite-eds-getacl -v $GUID
 
     export X509_USER_PROXY=$TEST_CERT_DIR/home/voms-acme.pem
     echo "export X509_USER_PROXY=$TEST_CERT_DIR/home/voms-acme.pem"
