@@ -42,7 +42,7 @@
 #define false	0
 
 
-void print_usage_and_die(FILE * out){
+static void print_usage_and_die(FILE * out){
     fprintf (out, "\n");
     fprintf (out, "<%s> Version %s by %s\n", PROGNAME, PACKAGE_VERSION, PROGAUTHOR);
     fprintf (out, "usage: %s <remotefilename> <localfilename> [-i <id>]\n", PROGNAME);
@@ -178,7 +178,7 @@ int main(int argc, char* argv[])
         return -1;
     } 
     
-    long long size = statbuf.st_size;
+    off_t size = statbuf.st_size;
 
     // Open local file
     // -------------------------------------------------------------------------
@@ -190,8 +190,7 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    int counter;
-    long long bytesread = 0;
+    off_t bytesread = 0;
     
     // Read Remote File
     // -------------------------------------------------------------------------
@@ -200,7 +199,7 @@ int main(int argc, char* argv[])
         if (nread <= 0) {
             
             TRACE_ERR((stderr,"\nFatal error during remote read. Error is (code: %d)\"\n",nread));
-            TRACE_ERR((stderr,"Transfer Finished after %d/%d bytes!\n",bytesread,size));
+            TRACE_ERR((stderr,"Transfer Finished after %lld/%lld bytes!\n",bytesread,size));
             close(fdump);
             gfal_close(fh);
             return -1;
@@ -218,7 +217,7 @@ int main(int argc, char* argv[])
         if (nwrite != dec_buffer_size) {
             const char * error_msg = strerror(errno);
             TRACE_ERR((stderr,"\nFatal error during local write. Error is \"%s (code: %d)\"\n",error_msg, errno));
-            TRACE_ERR((stderr,"Transfer Finished after %d/%d bytes!\n",bytesread,size));
+            TRACE_ERR((stderr,"Transfer Finished after %lld/%lld bytes!\n",bytesread,size));
             close(fdump);
             gfal_close(fh);
             return -1;
@@ -228,7 +227,6 @@ int main(int argc, char* argv[])
         // Print Progress Bar
         // ---------------------------------------------------------------------
         if(!silent) {
-            char sbasename[1024];
             TRACE_LOG((stdout,"[%s] Total %.02f MB\t|",PROGNAME,(float)size/1024/1024));
             int  l;
             for (l=0; l< 20;l++) {
@@ -245,7 +243,7 @@ int main(int argc, char* argv[])
 
             gettimeofday (&abs_stop_time, &tz);
             float abs_time=((float)((abs_stop_time.tv_sec - abs_start_time.tv_sec) *1000 + (abs_stop_time.tv_usec - abs_start_time.tv_usec) / 1000));
-            TRACE_LOG((stdout,"| %.02f \% [%.01f Mb/s]\r",100.0*bytesread/size,bytesread/abs_time/1000.0));
+            TRACE_LOG((stdout,"| %.02f %% [%.01f Mb/s]\r",100.0*bytesread/size,bytesread/abs_time/1000.0));
             fflush(stdout);
         }  // End Progress Bar
     } // End While
