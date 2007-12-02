@@ -172,7 +172,7 @@ static void free_str_list(char **array, int count)
 static unsigned char ** realloc_str_list(unsigned char ** list, unsigned int *count,
     unsigned int new_count)
 {
-    int i;
+    unsigned int i;
 
     list = realloc(list, sizeof(unsigned char **) * new_count);
     if (!list)
