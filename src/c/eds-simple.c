@@ -1,11 +1,14 @@
 /*
- *  Copyright (c) Members of the EGEE Collaboration. 2005.
+ *  Copyright (c) Members of the EGEE Collaboration. 2005-2007.
  *  See http://eu-egee.org/partners/ for details on the copyright holders.
- *  For license conditions see the license file or http://eu-egee.org/license.html
+ *  For license conditions see the license file or 
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  *  GLite Data Management - Simple encrypted data storage API implementation
  *
  *  Authors:
+ *        Andrei Kruger <andrei.krueger@cern.ch>
+ *        Akos Frohner <Akos.Frohner@cern.ch>
  *        Zoltan Farkas <Zoltan.Farkas@cern.ch>
  *        Patrick Guio <patrick.guio@bccs.uib.no>
  *
