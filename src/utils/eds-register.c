@@ -25,6 +25,7 @@
 #include <unistd.h>
 
 #include <glite/data/hydra/c/eds-simple.h>
+#include <glite/data/catalog/c/catalog-simple.h>
 
 #define PROGNAME     "glite-eds-key-register"
 #define PROGAUTHOR   "(C) EGEE"
@@ -104,15 +105,19 @@ int main(int argc, char **argv)
     // Do the registration
     // -------------------------------------------------------------------------
     char *error;
+    int errclass;
 
-    if (glite_eds_register(argv[optind], cipher, key_size, &error))
+    if (0 != (errclass = glite_eds_register(argv[optind], cipher, key_size, &error)))
     {
         TRACE_ERR((stderr, "Error during glite_eds_register: %s\n", error));
         free(error);
-        if (glite_eds_unregister(argv[optind], &error))
+        if (errclass != GLITE_CATALOG_EXCEPTION_EXISTS) 
         {
-            TRACE_ERR((stderr, "Error during glite_eds_unregister: %s\n", error));
-            free(error);
+            if (glite_eds_unregister(argv[optind], &error))
+            {
+                TRACE_ERR((stderr, "Error during glite_eds_unregister: %s\n", error));
+                free(error);
+            }
         }
         return -1;
     }

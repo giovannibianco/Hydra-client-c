@@ -216,16 +216,20 @@ static int glite_eds_put_metadata_single(char *endpoint, char *id,
     }
     if (glite_metadata_createEntry(ctx, id, "eds"))
     {
+        int err;
         asprintf(error, "glite_eds_put_metadata_single error (createEntry): %s", glite_catalog_get_error(ctx));
+        err = glite_catalog_get_errclass(ctx);
         glite_catalog_free(ctx);
-        return -1;
+        return err;
     }
 
     if (glite_metadata_setAttributes(ctx, id, attrs_count, attrs))
     {
+        int err;
         asprintf(error, "glite_eds_put_metadata_single error (setAttributes): %s", glite_catalog_get_error(ctx));
+        err = glite_catalog_get_errclass(ctx);
         glite_catalog_free(ctx);
-        return -1;
+        return err;
     }
     glite_catalog_free(ctx);
 
@@ -257,9 +261,11 @@ static int glite_eds_get_metadata_single(char *endpoint, char *id,
     result = glite_metadata_getAttributes(ctx, id, attrs_count, attrs, &result_cnt);
     if (result_cnt < 0)
     {
+        int err;
         asprintf(error, "glite_eds_init error: %s", glite_catalog_get_error(ctx));
+        err = glite_catalog_get_errclass(ctx);
         glite_catalog_free(ctx);
-        return -1;
+        return err;
     }
 
     data->hex_iv = get_attr_value(result, result_cnt, EDS_ATTR_IV, NULL);
@@ -299,6 +305,7 @@ static int glite_eds_get_metadata_single(char *endpoint, char *id,
 static int glite_eds_unregister_single(char *endpoint, char *id, char **error)
 {
     glite_catalog_ctx *ctx;
+    int res = 0;
     if (NULL == (ctx = glite_catalog_new(endpoint)))
     {
         asprintf(error, "glite_eds_unregister_single error: %s", glite_catalog_get_error(NULL));
@@ -308,10 +315,11 @@ static int glite_eds_unregister_single(char *endpoint, char *id, char **error)
     if (glite_metadata_removeEntry(ctx, id))
     {
         asprintf(error, "glite_eds_unregister_single error: %s", glite_catalog_get_error(ctx));
-        return -1;
+        res = glite_catalog_get_errclass(ctx);
     }
 
-    return 0;
+    glite_catalog_free(ctx);
+    return res;
 }
 
 /**
