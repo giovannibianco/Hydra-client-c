@@ -349,6 +349,40 @@ function test_31583 {
     test_success 'unregistered' glite-eds-key-unregister -v $GUID
 }
 
+function test_29851 {
+    echo "########################################################################"
+    echo "# Hydra: second ACL is not set"
+    echo "########################################################################"
+
+    export X509_USER_PROXY=$TEST_CERT_DIR/home/voms-acme.pem
+
+    GUID2=$(uuidgen)
+    test_success 'registered'  glite-eds-key-register -v $GUID
+    test_success 'registered'  glite-eds-key-register -v $GUID2
+
+    test_success "Base perms" \
+        glite-eds-getacl -v $GUID
+    test_success "Base perms" \
+        glite-eds-getacl -v $GUID2
+
+    test_success 'Changed ACLs' \
+        glite-eds-setacl -v -m a:r $GUID
+    test_success 'Changed ACLs' \
+        glite-eds-setacl -v -m b:r $GUID
+    test_success 'Changed ACLs' \
+        glite-eds-setacl -v -m a:r $GUID2
+    test_success 'Changed ACLs' \
+        glite-eds-setacl -v -m b:r $GUID2
+
+    test_success "b:--r-----" \
+        glite-eds-getacl -v $GUID
+    test_success "b:--r-----" \
+        glite-eds-getacl -v $GUID2
+
+    test_success 'unregistered' glite-eds-key-unregister -v $GUID
+    test_success 'unregistered' glite-eds-key-unregister -v $GUID2
+}
+
 
 test_17023
 test_encryption_speed
@@ -362,5 +396,6 @@ test_getPermission_checkPermission
 test_createEntry_checkPermission
 test_missing_service
 test_31583
+test_29851
 
 test_summary
