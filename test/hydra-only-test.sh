@@ -17,6 +17,13 @@ if [ -z "$GLITE_LOCATION" ]; then
     GLITE_LOCATION=$(dirname $0)/../../stage
 fi
 source $GLITE_LOCATION/share/test/utils/shunit
+# local build dirs may override
+if [ -d "$PWD/../build/src/c" ]; then
+    export LD_LIBRARY_PATH=$PWD/../build/src/c:$LD_LIBRARY_PATH
+fi
+if [ -d "$PWD/../build/src/utils" ]; then
+    export PATH=$PWD/../build/src/utils:$PATH
+fi
 
 # iteration number of the performance tests
 ITERATION=${ITERATION:-10}
@@ -275,6 +282,39 @@ function test_createEntry_checkPermission {
     test_success 'unregistered' glite-eds-key-unregister -v $GUID
 }
 
+function test_missing_service {
+    echo "####################################################"
+    echo "# Test for split key support with one missing server"
+    echo "####################################################"
+
+    echo "export X509_USER_PROXY=$TEST_CERT_DIR/home/voms-acme.pem"
+    export X509_USER_PROXY=$TEST_CERT_DIR/home/voms-acme.pem
+
+    echo "# All servers available: register/unregister"
+    export GLITE_SD_SERVICES_XML=$PWD/services.xml
+    test_success 'registered'  glite-eds-key-register -v $GUID
+    test_success 'unregistered' glite-eds-key-unregister -v $GUID
+
+    echo "# One server missing: register/unregister"
+    export GLITE_SD_SERVICES_XML=$PWD/services-missing.xml
+    test_failure 'Error during glite_eds_register'  glite-eds-key-register -v $GUID
+    test_failure 'Error during glite_eds_unregister' glite-eds-key-unregister -v $GUID
+    # resetting the default
+    export GLITE_SD_SERVICES_XML=$PWD/services.xml
+}
+
+function test_31583 {
+    echo "########################################################################"
+    echo "# glite-eds-key-register  may unregister valid entities on 'exist' error"
+    echo "########################################################################"
+
+    export X509_USER_PROXY=$TEST_CERT_DIR/home/voms-acme.pem
+    test_success 'registered'  glite-eds-key-register -v $GUID
+    test_failure 'Error during glite_eds_register'  glite-eds-key-register -v $GUID
+    test_success 'unregistered' glite-eds-key-unregister -v $GUID
+}
+
+
 test_17023
 test_encryption_speed
 test_registration_speed
@@ -285,5 +325,7 @@ test_remove_nonexistant_entry
 test_setPermission_checkPermission
 test_getPermission_checkPermission
 test_createEntry_checkPermission
+test_missing_service
+test_31583
 
 test_summary
