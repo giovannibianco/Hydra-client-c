@@ -299,8 +299,43 @@ function test_missing_service {
     export GLITE_SD_SERVICES_XML=$PWD/services-missing.xml
     test_failure 'Error during glite_eds_register'  glite-eds-key-register -v $GUID
     test_failure 'Error during glite_eds_unregister' glite-eds-key-unregister -v $GUID
-    # resetting the default
+
+    echo "# All servers available at register:"
     export GLITE_SD_SERVICES_XML=$PWD/services.xml
+    test_success 'registered'  glite-eds-key-register -v $GUID
+    export GLITE_SD_SERVICES_XML=$PWD/services-missing.xml
+    echo "# Testing en/decryption, with missing service:"
+    echo 'testdata' >$tempbase.input
+    test_success 'encrypted' glite-eds-encrypt -v $GUID $tempbase.input $tempbase.encrypted
+
+    test_success 'decrypted' glite-eds-decrypt -v $GUID $tempbase.encrypted $tempbase.output
+    cmp $tempbase.input $tempbase.output
+    if [[ $? == 0 ]]; then
+        echo 'File en-de-cryption worked correctly.'
+    else
+        echo 'En-de-crypted file is not same as the original!' >&2
+    fi
+
+    echo "# Testing set/getacl, with missing service:"
+    test_failure 'Corrupted permissions' \
+        glite-eds-getacl $GUID
+    test_failure 'HTTP error' \
+        glite-eds-chmod -v g+g $GUID
+    test_failure 'Change failed' \
+        glite-eds-chmod g+g $GUID
+    user02dn=$(openssl x509 -in $TEST_CERT_DIR/home/user02cert.pem -noout -subject)
+    test_failure 'HTTP error' \
+        glite-eds-setacl -v -m "${user02dn:9}:g" $GUID
+    test_failure 'Change failed' \
+        glite-eds-setacl -m "${user02dn:9}:g" $GUID
+    test_failure 'HTTP error' \
+        glite-eds-getacl -v $GUID
+    test_failure 'Corrupted permissions' \
+        glite-eds-getacl $GUID
+
+    # resetting the default and cleaning up
+    export GLITE_SD_SERVICES_XML=$PWD/services.xml
+    test_success 'unregistered' glite-eds-key-unregister -v $GUID
 }
 
 function test_31583 {
