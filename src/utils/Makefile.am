@@ -23,7 +23,7 @@ bin_PROGRAMS = glite-eds-get \
 
 glite_data_io_ldflags   = \
 	../c/libglite_data_eds_simple.la \
-	-L$(GLITE_LOCATION)/lib -lgfal -lcgsi_plugin_gsoap_2.7 -lvomsc \
+	$(GLITE_LDFLAGS) -lgfal -lcgsi_plugin_gsoap_2.7 -lvomsc \
 	-lglite_data_util -lgridsite_globus -lglite-sd-c \
 	-lglite_security_ssss \
 	$(GLOBUS_GSS_THR_LIBS) $(GLOBUS_SSL_THR_LIBS)
@@ -41,7 +41,7 @@ glite_eds_put_LDADD = $(glite_data_io_ldflags)
 glite_eds_rm_LDADD  = $(glite_data_io_ldflags)
 
 glite_data_eds_client_ldflags   = \
-	-L$(GLITE_LOCATION)/lib ../c/libglite_data_eds_simple.la \
+	$(GLITE_LDFLAGS) ../c/libglite_data_eds_simple.la \
 	-lglite_data_util -lgridsite_globus -lglite-sd-c \
 	$(GLOBUS_GSS_THR_LIBS) $(GLOBUS_SSL_THR_LIBS)
 
@@ -63,7 +63,7 @@ glite_eds_key_register_LDADD  = $(glite_data_eds_client_ldflags)
 glite_eds_key_unregister_LDADD  = $(glite_data_eds_client_ldflags)
 
 glite_data_hydra_client_ldflags   = \
-	-L$(GLITE_LOCATION)/lib ../c/libglite_data_eds_simple.la \
+	$(GLITE_LDFLAGS) ../c/libglite_data_eds_simple.la \
 	-lglite_data_util -lgridsite_globus -lglite-sd-c \
 	$(GLOBUS_GSS_THR_LIBS) $(GLOBUS_SSL_THR_LIBS) \
 	$(GLIB_LIBS)

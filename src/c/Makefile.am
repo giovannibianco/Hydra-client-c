@@ -98,7 +98,7 @@ libglite_data_eds_simple_la_SOURCES  = \
 	env.c
 
 libglite_data_eds_simple_la_LIBADD = \
-	-L$(GLITE_LOCATION)/lib -lglite_data_util \
+	$(GLITE_LDFLAGS) -lglite_data_util \
 	-lglite-sd-c \
 	-lglite_security_ssss \
 	$(GLIB_LIBS) 	\
