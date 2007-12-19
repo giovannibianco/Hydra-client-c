@@ -1,3 +1,8 @@
+*** Release glite-data-hydra-cli_R_3_1_0_2 2007-12-19
+
+	o Fixed the x86_64 link by using GLITE_LDFLAGS
+	o Recursive dependency on VOMS for GFAL
+
 *** Release glite-data-hydra-cli_R_3_1_0_1 2007-12-07
 
     o Fixed bug#12669: split-key support 
