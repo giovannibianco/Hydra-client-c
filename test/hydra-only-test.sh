@@ -78,6 +78,8 @@ function test_encryption_speed {
         if [[ $? != 0 ]]; then echo "En/decryption failure at $i!"; $FAILONERROR 2; fi; \
     done)
 
+    rm -f $tempbase-*.encrypted $tempbase-*.output
+
     test_success 'unregistered' glite-eds-key-unregister -v $GUID
 }
 
@@ -169,7 +171,7 @@ function test_17024 {
 
 function test_17026 {
     echo "#####################################"
-    echo "# Test for #17026"
+    echo "# Test for changing ACL #17026"
     echo "#####################################"
 
     export X509_USER_PROXY=$TEST_CERT_DIR/home/user01-voms.pem
@@ -188,20 +190,18 @@ function test_17026 {
 
 function test_17027 {
     echo "#####################################"
-    echo "# Test for #17027"
+    echo "# Test for getacl #17027"
     echo "#####################################"
 
     export X509_USER_PROXY=$TEST_CERT_DIR/home/voms-acme.pem
     test_success 'registered'  glite-eds-key-register -v $GUID
 
-    # https://savannah.cern.ch/bugs/?31800
-    test_failure "identity  : /C=UG/L=Tropic/O=Utopia/OU=Relaxation/CN=$LOGNAME" \
+    test_success "identity  : /C=UG/L=Tropic/O=Utopia/OU=Relaxation/CN=$LOGNAME" \
         voms-proxy-info -all 
     test_success "# User: /C=UG/L=Tropic/O=Utopia/OU=Relaxation/CN=$LOGNAME" \
         glite-eds-getacl -v $GUID
 
-    # https://savannah.cern.ch/bugs/?31800
-    test_failure 'attribute : /org.acme' \
+    test_success 'attribute : /org.acme' \
         voms-proxy-info -debug -all
     test_success '# Group: /org.acme' \
         glite-eds-getacl -v $GUID
@@ -339,9 +339,9 @@ function test_missing_service {
 }
 
 function test_31583 {
-    echo "########################################################################"
-    echo "# glite-eds-key-register  may unregister valid entities on 'exist' error"
-    echo "########################################################################"
+    echo "#########################################################################"
+    echo "# glite-eds-key-register  may unregister valid entities on 'exist' #31583"
+    echo "#########################################################################"
 
     export X509_USER_PROXY=$TEST_CERT_DIR/home/voms-acme.pem
     test_success 'registered'  glite-eds-key-register -v $GUID
@@ -351,7 +351,7 @@ function test_31583 {
 
 function test_29851 {
     echo "########################################################################"
-    echo "# Hydra: second ACL is not set"
+    echo "# Hydra: second ACL is not set, #29851"
     echo "########################################################################"
 
     export X509_USER_PROXY=$TEST_CERT_DIR/home/voms-acme.pem
@@ -383,6 +383,42 @@ function test_29851 {
     test_success 'unregistered' glite-eds-key-unregister -v $GUID2
 }
 
+function test_admin_override {
+    echo "###################################"
+    echo "# Test for administrator privileges"
+    echo "###################################"
+
+    # the test service is configured to accept create entry
+    # requests from the /org.acme VO only, however user03
+    # is registered to be the administrator
+
+    export X509_USER_PROXY=$TEST_CERT_DIR/home/user01_grid_proxy.pem
+    echo "export X509_USER_PROXY=$TEST_CERT_DIR/home/user01_grid_proxy.pem"
+    test_failure 'Error'  glite-eds-key-register -v $GUID
+    test_failure 'Error' glite-eds-key-unregister -v $GUID
+
+    # the admin should be able to create keys
+    export X509_USER_PROXY=$TEST_CERT_DIR/home/user03_grid_proxy.pem
+    echo "export X509_USER_PROXY=$TEST_CERT_DIR/home/user03_grid_proxy.pem"
+    test_success 'registered'  glite-eds-key-register -v $GUID
+    test_success 'unregistered' glite-eds-key-unregister -v $GUID
+
+    export X509_USER_PROXY=$TEST_CERT_DIR/home/voms-acme.pem
+    echo "export X509_USER_PROXY=$TEST_CERT_DIR/home/voms-acme.pem"
+    test_success 'registered'  glite-eds-key-register -v $GUID
+
+    # the admin should be able to remove other one's keys
+    export X509_USER_PROXY=$TEST_CERT_DIR/home/user03_grid_proxy.pem
+    echo "export X509_USER_PROXY=$TEST_CERT_DIR/home/user03_grid_proxy.pem"
+    test_success 'unregistered' glite-eds-key-unregister -v $GUID
+
+    # just-in-case cleanup: the key should not be there, 
+    # however if it is still there, this will clean it up
+    export X509_USER_PROXY=$TEST_CERT_DIR/home/voms-acme.pem
+    echo "export X509_USER_PROXY=$TEST_CERT_DIR/home/voms-acme.pem"
+    test_failure 'Error'  glite-eds-key-unregister -v $GUID
+}
+
 
 test_17023
 test_encryption_speed
@@ -397,5 +433,6 @@ test_createEntry_checkPermission
 test_missing_service
 test_31583
 test_29851
+test_admin_override
 
 test_summary
