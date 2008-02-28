@@ -6,7 +6,7 @@
 <!ENTITY common-hydra-env SYSTEM "common-hydra-env.xml">
 ]>
 
-<refentry id="glite-eds-encrypt.1" revision="$Revision: 1.4 $">
+<refentry id="glite-eds-encrypt.1" revision="$Revision: 1.5 $">
 
 <refentryinfo>
     <!-- These information are shown on the manpage -->
@@ -45,7 +45,7 @@
     <cmdsynopsis>
 	<command>glite-eds-encrypt</command>
 
-&common-hydra-args;
+	&common-hydra-args;
 
         <arg choice="plain"><option><replaceable>ID</replaceable></option></arg>
         <arg choice="plain"><option><replaceable>INPUT_FILE</replaceable></option></arg>
@@ -72,7 +72,7 @@
     <title>OPTIONS</title>
     <variablelist>
 
-&common-hydra-arg-desc;
+	&common-hydra-arg-desc;
 
         <varlistentry>
             <term><option><replaceable>ID</replaceable></option></term>

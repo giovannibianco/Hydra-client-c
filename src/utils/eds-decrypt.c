@@ -34,7 +34,6 @@
 
 static void print_usage_and_die(FILE * out){
     fprintf(out, "\n");
-    fprintf(out, "<%s> Version %s by %s\n", PROGNAME, PACKAGE_VERSION, PROGAUTHOR);
     fprintf(out, "usage: %s <ID> <input_filename> <output_filename>\n", PROGNAME);
     fprintf(out, " ");
     fprintf(out, " Decrypt a file locally with the key that is stored for a given ID. \n");
@@ -42,12 +41,10 @@ static void print_usage_and_die(FILE * out){
     fprintf(out, " input_filename : The encrypted file to be decrypted \n");
     fprintf(out, " output_filename: The decrypted file which is written \n");
     fprintf(out, " Optional flags:\n");
-    fprintf(out, "  -v      : verbose mode\n");
-    fprintf(out, "  -q      : quiet mode\n");
-/**
-    fprintf(out, "  -s URL  : the Hydra KeyStore to talk to\n");
-**/
     fprintf(out, "  -h      : print this screen\n");
+    fprintf(out, "  -q      : quiet mode\n");
+    fprintf(out, "  -v      : verbose mode\n");
+    fprintf(out, "  -V      : print version and exit\n");
     if(out == stdout){
         exit(0);
     }
@@ -58,22 +55,14 @@ int main(int argc, char **argv)
 {
     int flag;
     char *in, *id, *out;
-/**
-    char *service_endpoint = NULL;
-**/
     int silent = 0; // false
 
-    while ((flag = getopt(argc, argv, "qhvs:")) != -1) {
+    while ((flag = getopt(argc, argv, "qhvV")) != -1) {
         switch (flag) {
             case 'q':
                 silent = 1; // true
                 unsetenv(TOOL_USER_VERBOSE);
                 break;
-/**
-            case 's':
-                service_endpoint = strdup(optarg);
-                break;
-**/
             case 'h':
                 print_usage_and_die(stdout);
                 break;
@@ -81,6 +70,10 @@ int main(int argc, char **argv)
                 setenv(TOOL_USER_VERBOSE, "YES", 1);
                 silent = 0; // false
                 break;
+            case 'V':
+				fprintf(stdout, "<%s> Version %s by %s\n",
+					PROGNAME, PACKAGE_VERSION, PROGAUTHOR);
+				exit(0);
             default:
                 print_usage_and_die(stderr);
                 break;

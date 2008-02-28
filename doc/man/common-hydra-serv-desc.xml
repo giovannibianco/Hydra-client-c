@@ -1,0 +1,34 @@
+	<varlistentry>
+	    <term>
+		<group choice="plain">
+		    <arg choice="plain"><option>-s <replaceable>SERVICE</replaceable></option></arg>
+		</group>
+	    </term>
+
+	    <listitem>
+		<para>
+		    Specifies the service endpoint to use.
+		    If <option><replaceable>SERVICE</replaceable></option> starts
+		    with <userinput>http://</userinput>, <userinput>https://</userinput> or 
+            <userinput>httpg://</userinput>,
+		    then it is taken as a direct service endpoint URL.
+		    Otherwise <option><replaceable>SERVICE</replaceable></option> is taken as
+		    a service instance name and Service Discovery is invoked to look up the
+		    endpoint.
+		</para>
+		<para>
+		    If this option is not specified, Service Discovery will be invoked and
+		    the first available catalog will be used. If the Service Discovery
+		    fails, the program will exit with an error.
+		</para>
+		<note>
+		    <para>
+			If this option is not specified, only services with a known good status
+			will be returned by Service Discovery. However if you explicitely specify a
+			service name or an endpoint, the tool will try to use it regardless of its
+			registered status.
+		    </para>
+		</note>
+	    </listitem>
+	</varlistentry>
+<!-- vim: set ai sw=4: -->

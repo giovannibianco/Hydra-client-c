@@ -37,18 +37,15 @@
 
 static void print_usage_and_die(FILE * out){
     fprintf(out, "\n");
-    fprintf(out, "<%s> Version %s by %s\n", PROGNAME, PACKAGE_VERSION, PROGAUTHOR);
     fprintf(out, "usage: %s <ID>\n", PROGNAME);
     fprintf(out, "  ID      : The remote ID (lfn or GUID) of the key \n");
     fprintf(out, " Optional parameters:\n");
-    fprintf(out, "  -v      : verbose mode\n");
-    fprintf(out, "  -q      : quiet mode\n");
-/***
-    fprintf(out, "  -s URL  : the Hydra KeyStore to talk to\n");
-***/
     fprintf(out, "  -c name : cipher name to use\n");
     fprintf(out, "  -k n    : key size to use in bits\n");
     fprintf(out, "  -h      : print this screen\n");
+    fprintf(out, "  -q      : quiet mode\n");
+    fprintf(out, "  -v      : verbose mode\n");
+    fprintf(out, "  -V      : print version and exit\n");
     if (out == stdout) {
         exit(0);
     }
@@ -60,14 +57,8 @@ int main(int argc, char **argv)
     int flag, key_size = 0;
     char *cipher = NULL;
     int silent = 0;
-/***
-    char *service_endpoint = NULL;
-***/
 
-/***
-    while ((flag = getopt (argc, argv, "qhvc:k:s:")) != -1) {
-***/
-    while ((flag = getopt (argc, argv, "qhvc:k:")) != -1) {
+    while ((flag = getopt (argc, argv, "qhvVc:k:")) != -1) {
         switch (flag) {
             case 'q':
                 silent = 1;
@@ -75,11 +66,6 @@ int main(int argc, char **argv)
             case 'h':
                 print_usage_and_die(stdout);
                 break;
-/***
-            case 's':
-                service_endpoint = strdup(optarg);
-                break;
-***/
             case 'v':
                 silent = 0;
                 break;
@@ -92,6 +78,10 @@ int main(int argc, char **argv)
                     TRACE_ERR((stderr, "Parsing key size failed!"));
                 }
                 break;
+            case 'V':
+				fprintf(stdout, "<%s> Version %s by %s\n",
+					PROGNAME, PACKAGE_VERSION, PROGAUTHOR);
+				exit(0);
             default:
                 print_usage_and_die(stderr);
                 break;

@@ -43,24 +43,21 @@
 
 #define TOOL_USER_VERBOSE   "__GLITE_EDS_VERBOSE"
 
-void print_usage_and_die(FILE * out){
+static void print_usage_and_die(FILE * out){
     fprintf(out, "\n");
-    fprintf(out, "<%s> Version %s by %s\n", PROGNAME, PACKAGE_VERSION, PROGAUTHOR);
-    fprintf(out, "usage: %s <localfilename> <remotefilename> [-i <id>] [-m <mode>]\n",
+    fprintf(out, "usage: %s <localfilename> <remotefilename> [-i <id>]\n",
 	    PROGNAME);
     fprintf(out, " Optional parameters:\n");
     fprintf(out, "  -i <id>        : the ID to use to look up the decryption key of this file "
 	    "(defaults to the remotefilename's GUID).\n");
-    fprintf(out, "  -m <mode>        : the permission to use for the new file "
-	    "(default is 0640).\n");
-    fprintf(out, "  -v      : verbose mode\n");
-    fprintf(out, "  -q      : quiet mode\n");
-    fprintf(out, "  -s URL  : the IO server to talk to\n");
     fprintf(out, "  -c name : cipher name to use\n");
     fprintf(out, "  -k n    : key size to use in bits\n");
     fprintf(out, "  -u      : don't actually encrypt the data, just do the key gen/registration\n");
     fprintf(out, "            this is useful for some special setups where the SE crypts by itself\n");
     fprintf(out, "  -h      : print this screen\n");
+    fprintf(out, "  -q      : quiet mode\n");
+    fprintf(out, "  -v      : verbose mode\n");
+    fprintf(out, "  -V      : print version and exit\n");
     if (out == stdout) {
 	exit(0);
     }
@@ -69,76 +66,59 @@ void print_usage_and_die(FILE * out){
 
 int main(int argc, char **argv)
 {
-    int flag, key_size = 0, mode = 0640;
-    char *in, *remote, *out, *cipher = NULL;
-    int silent = false, progbar = false, reg_only = false;
+    int flag, key_size = 0;
+    char *cipher = NULL;
+    int silent = false, reg_only = false;
     char localfilename[GFAL_LFN_LENGTH];
     char remotefilename[GFAL_LFN_LENGTH + 7];
     
     struct timeval abs_start_time;
     struct timeval abs_stop_time;
     struct timezone tz;
-    char *service_endpoint = NULL;
     char *id = NULL;
 
-    while ((flag = getopt (argc, argv, "m:qhvuc:k:s:i:")) != -1) {
+    while ((flag = getopt (argc, argv, "qhvVuc:k:i:")) != -1) {
         switch (flag) {
-            case 'm':
-                sscanf(optarg,"%o",&mode);
+		case 'q':
+			silent = true;
+			unsetenv(TOOL_USER_VERBOSE);
         	break;
-            case 'q':
-                silent = true;
-		unsetenv(TOOL_USER_VERBOSE);
+		case 'u':
+			reg_only = true;
+			unsetenv(TOOL_USER_VERBOSE);
         	break;
-            case 'u':
-                reg_only = true;
-		unsetenv(TOOL_USER_VERBOSE);
+		case 'h':
+			print_usage_and_die(stdout);
         	break;
-            case 'h':
-                print_usage_and_die(stdout);
-        	break;
-	    case 's':
-		service_endpoint = strdup(optarg);
-		break;
-	    case 'i':
-		id = strdup(optarg);
-		break;
+		case 'i':
+			id = strdup(optarg);
+			break;
 	    case 'v':
-		setenv(TOOL_USER_VERBOSE, "YES", 1);
-		silent = false;
-		break;
+			setenv(TOOL_USER_VERBOSE, "YES", 1);
+			silent = false;
+			break;
+	    case 'V':
+			fprintf(stdout, "<%s> Version %s by %s\n",
+				PROGNAME, PACKAGE_VERSION, PROGAUTHOR);
+			exit(0);
 	    case 'c':
-		cipher = strdup(optarg);
-		break;
+			cipher = strdup(optarg);
+			break;
 	    case 'k':
-		if (1 != sscanf(optarg, "%d", &key_size))
-		{
-		    TRACE_ERR((stderr, "Parsing key size failed!"));
-		}
+			if (1 != sscanf(optarg, "%d", &key_size))
+			{
+				TRACE_ERR((stderr, "Parsing key size failed!"));
+			}
 		break;
             default:
-                print_usage_and_die(stderr);
-		break;
+			print_usage_and_die(stderr);
+			break;
         } // End Switch
     } // End while
     
     if (argc != (optind+2)) {
         print_usage_and_die(stderr);
     }
-    
-    if ((mode < 0001) || (mode > 0777)) {
-        TRACE_ERR((stderr,"Invalid permission specified. The value should be in"
-		   " the range [0001,0777]\n"));
-        print_usage_and_die(stderr);
-    }
-    
-    // Initialize the client
-    // -------------------------------------------------------------------------
-//    int initres = glite_io_initialize(service_endpoint, false);
-//    if (initres < 0) {
-//        TRACE_ERR((stderr, "Cannot Initialize!\n"));
-//        return -1;
-//    }       
     
     // Copy Local file name
     // -------------------------------------------------------------------------
@@ -244,7 +224,6 @@ int main(int argc, char **argv)
     // Get The Logger
     // -------------------------------------------------------------------------
     
-    int counter;
     long long bytesread = 0;
     
     // Read Local File
@@ -255,7 +234,7 @@ int main(int argc, char **argv)
             const char * error_msg = strerror(errno);
             TRACE_ERR((stderr,"\nFatal error during local read. Error is \"%s "
 		       "(code: %d)\"\n", error_msg, errno));
-            TRACE_ERR((stderr,"Transfer Finished after %d/%d bytes!\n",
+            TRACE_ERR((stderr,"Transfer Finished after %lld/%lld bytes!\n",
 		       bytesread, size));
 	    if (glite_eds_unregister(id, &error))
 	    {
@@ -278,7 +257,7 @@ int main(int argc, char **argv)
 	    if (nwrite != nread) {
 		const char * error_msg = strerror(errno);
 		TRACE_ERR((stderr,"\nFatal error during remote write. Error is \"%s (code: %d)\"\n",error_msg, errno));
-		TRACE_ERR((stderr,"Transfer Finished after %d/%d bytes!\n",bytesread,size));
+		TRACE_ERR((stderr,"Transfer Finished after %lld/%lld bytes!\n",bytesread,size));
 		close(fdump);
 		gfal_close(fh);
 		return -1;
@@ -316,7 +295,7 @@ int main(int argc, char **argv)
 		const char * error_msg = strerror(errno);
 		TRACE_ERR((stderr, "\nFatal error during remote write. Error is "
 			   "\"%s (code: %d)\"\n",error_msg, errno));
-		TRACE_ERR((stderr,"Transfer Finished after %d/%d bytes!\n",
+		TRACE_ERR((stderr,"Transfer Finished after %lld/%lld bytes!\n",
 			   bytesread, size));
 		if (glite_eds_unregister(id, &error))
 		    {
@@ -338,7 +317,6 @@ int main(int argc, char **argv)
         // Print Progress Bar
         // ---------------------------------------------------------------------
         if(!silent) {
-            char sbasename[1024];
             TRACE_LOG((stdout,"[%s] Total %.02f MB\t|",PROGNAME,(float)size/1024/1024));
             int l;
             for (l=0; l< 20;l++) {
@@ -355,7 +333,9 @@ int main(int argc, char **argv)
 	    
             gettimeofday (&abs_stop_time, &tz);
             float abs_time=((float)((abs_stop_time.tv_sec - abs_start_time.tv_sec) *1000 + (abs_stop_time.tv_usec - abs_start_time.tv_usec) / 1000));
-            TRACE_LOG((stdout,"| %.02f \% [%.01f Mb/s]\r",100.0*bytesread/size,bytesread/abs_time/1000.0));
+            TRACE_LOG((stdout,"| %.02f %% [%.01f Mb/s]\r",
+			100.0*(float)bytesread/(float)size,
+			(float)bytesread/abs_time/1000.0));
             fflush(stdout);
         }  // End Progress Bar
     } // End While

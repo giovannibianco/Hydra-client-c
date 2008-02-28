@@ -1,0 +1,3 @@
+	<group>
+	    <arg choice="plain"><option>-s <replaceable>SERVICE</replaceable></option></arg>
+	</group>
