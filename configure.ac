@@ -18,11 +18,7 @@ AM_INIT_AUTOMAKE([1.6.3 subdir-objects])
 AC_COPYRIGHT([Copyright (c) 2004 The EU EGEE Project
 See LICENCE file for details
 ])
-AC_REVISION([$Revision: 1.9 $])
-
-#Environment.
-WORKDIR=`pwd`
-AC_SUBST(WORKDIR)
+AC_REVISION([$Revision: 1.10 $])
 
 # Check for the basic compile environment.
 AC_PROG_CC
@@ -47,26 +43,13 @@ AC_GSOAP
 
 #Conditions for Gsoap on-the-fly paches
 AM_CONDITIONAL(USE_GSOAP_2_7_6, [test "x$GSOAP_VERSION_NUM" = "x020706"])
-AC_MSG_RESULT(["USE_GSOAP_2_7_6 is [$USE_GSOAP_2_7_6]"])
 AM_CONDITIONAL(USE_GSOAP_2_7_9, [test "x$GSOAP_VERSION_NUM" = "x020709"])
-AC_MSG_RESULT(["USE_GSOAP_2_7_9 is [$USE_GSOAP_2_7_9]"])
+AM_CONDITIONAL(USE_GSOAP_2_7_10, [test "x$GSOAP_VERSION_NUM" = "x020710"])
 
 # Set CGSI GSOAP Plugin Properties
 AC_CGSI_GSOAP
 
-dnl Standard warnings.
-WARNINGS=""
-#WARNINGS="-Wall -Wpointer-arith -Wmissing-prototypes -Woverloaded-virtual -Wmissing-declarations 
-#-Wcast-align -Wwrite-strings -Wformat"
-
-# default compiler flags
-am_cxx_flags="$WARNINGS $am_cxx_flags"
-
-# default linker flags
-am_ld_flags="$am_ld_flags"
-
 # Arguments.
-
 AC_ARG_ENABLE(
 	[debug],
 	[  --enable-debug     Produce an executable with debugging symbols],

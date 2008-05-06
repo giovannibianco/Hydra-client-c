@@ -52,11 +52,17 @@ WSDL2H_POSTFIX_METADATA=@echo 'No patch needed for '
 endif
 endif
 
+if USE_GSOAP_2_7_10
+WSDL2HFLAGS=-z
+else
+WSDL2HFLAGS=
+endif
+
 # Metadata Service Header File
 # Please note that the header file has to be post-processed since gsoap is not
 # handling the fault messages in the correct namespaces
 $(METADATA_SERVICE_H): $(METADATA_WSDL_FILE) typemap.dat
-	$(WSDL2H) -t $(srcdir)/typemap.dat -n $(METADATA_NAMESPACE) -c -s -o $@ $(METADATA_WSDL_FILE)
+	$(WSDL2H) $(WSDL2HFLAGS) -t $(srcdir)/typemap.dat -n $(METADATA_NAMESPACE) -c -s -o $@ $(METADATA_WSDL_FILE)
 	@echo 'postfix is [$(WSDL2H_POSTFIX_METADATA)]'
 	$(WSDL2H_POSTFIX_METADATA) $@
 
