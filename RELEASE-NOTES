@@ -1,3 +1,7 @@
+*** Release glite-data-hydra-cli_R_3_1_1_1 2008-05-06
+	
+    o fix for gsoap 2.7.10
+
 *** Release glite-data-hydra-cli_R_3_1_0_2 2007-12-19
 
 	o Fixed the x86_64 link by using GLITE_LDFLAGS
