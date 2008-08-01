@@ -1,6 +1,6 @@
 *** Release glite-data-hydra-cli_R_3_1_1_2 2008-07-01
 
-	o Updated the CGSI_gSOAP dependency to gSOAP 2.7.10 as well.
+	o Reverting to gsoap 2.7.6b
 
 *** Release glite-data-hydra-cli_R_3_1_1_1 2008-05-06
 	
