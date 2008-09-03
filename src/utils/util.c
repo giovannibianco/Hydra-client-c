@@ -6,7 +6,7 @@
  *  GLite Data Catalog - Utility functions for the command-line tools
  *
  *  Authors: Gabor Gombas <Gabor.Gombas@cern.ch>
- *  Version info: $Id: util.c,v 1.3 2007-11-30 17:47:15 szamsu Exp $ 
+ *  Version info: $Id: util.c,v 1.4 2008-09-03 15:00:43 akrueger Exp $ 
  *  Release: $Name: not supported by cvs2svn $
  *
  */
@@ -61,8 +61,13 @@ int parse_perm(const char *src, glite_catalog_Perm *perm)
 	char *p;
 
 	*perm = 0;
-	while (*src)
+	while (*src && *src != '\n' && *src != '\r')
 	{
+		if (*src == '-')
+		{
+			src++;
+			continue;
+		}
 		p = strchr(perm_bits, *src);
 		if (!p)
 			return -1;
@@ -263,11 +268,6 @@ int parse_acl(acl_ctx *actx, char *opt_arg, operation_code op)
 	int ret;
 
 	p = strchr(opt_arg, ':');
-	if (!p && (op != OP_DEL))
-	{
-		error("setacl: Missing permissions in %s", opt_arg);
-		return -1;
-	}
 	if (p)
 	{
 		ret = parse_perm(p + 1, &perm);
@@ -280,8 +280,15 @@ int parse_acl(acl_ctx *actx, char *opt_arg, operation_code op)
 		/* Cut the permission part */
 		*p = '\0';
 	}
-	else
+	else if (op == OP_DEL)
+	{
 		perm = 0;
+	}
+	else
+	{
+		error("setacl: Missing permissions in %s", opt_arg);
+		return -1;
+	}
 
 	if (check_duplicate(actx->mod_acls, opt_arg))
 	{
@@ -349,7 +356,7 @@ int read_aclfile(acl_ctx *actx, const char *filename, operation_code op)
 			break;
 		/* Skip comment lines */
 		if (*p == '#')
-			break;
+			continue;
 
 		ret = parse_acl(actx, p, op);
 		if (ret)
