@@ -1,23 +1,27 @@
+*** Release glite-data-hydra-cli_R_3_1_1_3 2008-09-04
+
+    o Fixed reading permissions from a file (bug#40190)
+
 *** Release glite-data-hydra-cli_R_3_1_1_2 2008-07-01
 
-	o Reverting to gsoap 2.7.6b
+    o Reverting to gsoap 2.7.6b
 
 *** Release glite-data-hydra-cli_R_3_1_1_1 2008-05-06
-	
+
     o fix for gsoap 2.7.10
 
 *** Release glite-data-hydra-cli_R_3_1_0_2 2007-12-19
 
-	o Fixed the x86_64 link by using GLITE_LDFLAGS
-	o Recursive dependency on VOMS for GFAL
+    o Fixed the x86_64 link by using GLITE_LDFLAGS
+    o Recursive dependency on VOMS for GFAL
 
 *** Release glite-data-hydra-cli_R_3_1_0_1 2007-12-07
 
     o Fixed bug#12669: split-key support 
     o Improved error propagation from lower layers in order to fix bug#31583
       (key removed, when registered, but was already there).
-	o test for bug#29851 and bug#31583
-	o LICENSE change to Apache2
+    o test for bug#29851 and bug#31583
+    o LICENSE change to Apache2
     o new dependency on glite-security-ssss
 
 *** Release glite-data-hydra-cli_R_3_0_0_1 2007-11-23
