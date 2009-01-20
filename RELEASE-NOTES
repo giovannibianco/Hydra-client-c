@@ -1,3 +1,7 @@
+*** Release glite-data-hydra-cli_R_3_1_2_1 2009-01-20
+
+    o Updated gfal to version 1.11.0 (bug #41592)
+
 *** Release glite-data-hydra-cli_R_3_1_1_3 2008-09-04
 
     o Fixed reading permissions from a file (bug#40190)
