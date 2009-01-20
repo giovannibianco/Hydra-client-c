@@ -26,6 +26,7 @@
 
 #include <glite/data/hydra/c/eds-simple.h>
 #include <gfal_api.h>
+#include <gfal_internals.h> /* without warranty */
 
 
 #define PROGNAME     "glite-eds-put"
@@ -427,7 +428,7 @@ int main(int argc, char **argv)
     
     char **replicas;
     char **p;
-    if((replicas = surlsfromguid(id, errbuf, sizeof(errbuf))) != NULL) {
+    if((replicas = gfal_get_replicas(remotefilename, id, errbuf, sizeof(errbuf))) != NULL) {
         for(p = replicas; *p != NULL; p++) {
         	TRACE_LOG((stdout, "  SURL                    : %s  \n", *p));
         }
