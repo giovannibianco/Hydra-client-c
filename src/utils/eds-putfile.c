@@ -193,8 +193,13 @@ int main(int argc, char **argv)
     char errbuf[256];
 
     if(NULL == id) {
+	if (strncmp(remotefilename, "lfn:", 4) != 0) {
+		TRACE_ERR((stderr,"Protocol not supported: %s. Use LFN format.\n",remotefilename));
+		gfal_close(fh);
+		return (-1);
+	}
 
-	if((id = guidfromlfn(remotefilename, errbuf, sizeof(errbuf))) == NULL){
+	if((id = guidfromlfn(remotefilename + 4, errbuf, sizeof(errbuf))) == NULL){
 		TRACE_ERR((stderr,"Cannot get guid for remote File %s. Error is %s (code: %d)\"\n",remotefilename,errbuf,errno));
 		gfal_close(fh);
 		return (-1);
