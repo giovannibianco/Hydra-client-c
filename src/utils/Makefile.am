@@ -22,11 +22,11 @@ bin_PROGRAMS = glite-eds-get \
 			   glite-eds-getacl
 
 glite_data_io_ldflags   = \
-	../c/libglite_data_eds_simple.la \
 	$(GLITE_LDFLAGS) -lgfal -lcgsi_plugin_gsoap_2.7 -lvomsc \
 	-lglite_data_util -L$(GLITE_LOCATION)/lib -lgridsite_globus -lglite-sd-c \
 	-lglite_security_ssss \
-	$(GLOBUS_GSS_THR_LIBS) $(GLOBUS_SSL_THR_LIBS)
+	$(GLOBUS_GSS_THR_LIBS) $(GLOBUS_SSL_THR_LIBS) \
+	../c/libglite_data_eds_simple.la
 
 glite_eds_get_SOURCES = eds-getfile.c
 
