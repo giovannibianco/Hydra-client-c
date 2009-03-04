@@ -110,7 +110,7 @@ int main(int argc, char* argv[]) {
     // -------------------------------------------------------------------------
     if (canonical_url(argv[optind], "lfn", remotefilename, sizeof(remotefilename),
                 errbuf, sizeof(errbuf)) < 0) {
-            TRACE_ERR((stderr,"Error in Remote File Name %s. Error is %s (code: %d)\"\n",
+            TRACE_ERR((stderr,"Error in Remote File Name %s. Error is \"%s (code: %d)\"\n",
                     remotefilename, errbuf, errno));
         goto err;
     }
@@ -123,7 +123,7 @@ int main(int argc, char* argv[]) {
     if(id == NULL) {
         if (strncmp(remotefilename, "lfn:", 4) == 0) {
             if ((id = guidfromlfn(remotefilename + 4, errbuf, sizeof(errbuf))) == NULL) {
-                TRACE_ERR((stderr,"Cannot get guid for LFN-file %s. Error is %s (code: %d)\"\n",
+                TRACE_ERR((stderr,"Cannot get guid for LFN-file %s. Error is \"%s (code: %d)\"\n",
                             remotefilename + 4, errbuf, errno));
                 goto err;
             }
@@ -155,7 +155,7 @@ int main(int argc, char* argv[]) {
     // -------------------------------------------------------------------------
 
     if (gfal_unlink(remotefilename)<0) {
-        TRACE_ERR((stderr,"WARNING: cannot unlink remote file %s. Error is %s (code: %d)\"\n",
+        TRACE_ERR((stderr,"WARNING: cannot unlink remote file %s. Error is \"%s (code: %d)\"\n",
                     remotefilename, strerror(errno), errno));
         failures++;
     }
