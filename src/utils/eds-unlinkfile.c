@@ -108,7 +108,6 @@ int main(int argc, char* argv[]) {
 
     // Copy file name
     // -------------------------------------------------------------------------
-    strcpy(remotefilename,argv[optind]);
     if (canonical_url(argv[optind], "lfn", remotefilename, sizeof(remotefilename),
                 errbuf, sizeof(errbuf)) < 0) {
             TRACE_ERR((stderr,"Error in Remote File Name %s. Error is %s (code: %d)\"\n",
