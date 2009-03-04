@@ -63,16 +63,6 @@ static void print_usage_and_die(FILE * out){
     exit((out == stdout) ? 0 : -1);
 }
 
-static char * lfn_name(char * filename)
-{
-    if (strncmp(filename, "lfn:", 4) != 0)
-        return NULL;
-    int i = 4;
-    /* Remove double leading slashes */
-    while ( filename[i] == '/' && filename[i+1] == '/' ) i++;
-    return filename + i;
-}
-
 int main(int argc, char **argv)
 {
     int flag, key_size = 0;
@@ -146,16 +136,16 @@ int main(int argc, char **argv)
                     GFAL_LFN_LENGTH - 1));
         goto err;
     }
-    strcpy(localfilename ,argv[optind]);
+    strcpy(localfilename, argv[optind]);
 
     // Copy Remote file name
     // -------------------------------------------------------------------------
-    if (strlen(argv[optind+1]) > GFAL_LFN_LENGTH + 6) {
-        TRACE_ERR((stderr, "Remote filename is too long (more than %d chars)!\n",
-                    GFAL_LFN_LENGTH + 6));
+    if (canonical_url(argv[optind + 1], "lfn", remotefilename, sizeof(remotefilename),
+                errbuf, sizeof(errbuf)) < 0) {
+            TRACE_ERR((stderr,"Error in Remote File Name %s. Error is %s (code: %d)\"\n",
+                    remotefilename, errbuf, errno));
         goto err;
     }
-    strcpy(remotefilename, argv[optind + 1]);
 
     // Allocate transfer buffer
     // -------------------------------------------------------------------------
@@ -200,11 +190,10 @@ int main(int argc, char **argv)
     // Fetch the guid of the file
     // -------------------------------------------------------------------------$
     if (id == NULL) {
-        char * cleanname;
-        if ((cleanname = lfn_name(remotefilename)) != NULL) {
-            if ((id = guidfromlfn(cleanname, errbuf, sizeof(errbuf))) == NULL) {
-                TRACE_ERR((stderr,"Cannot get guid for remote File %s. Error is %s (code: %d)\"\n",
-                            remotefilename, errbuf, errno));
+        if (strncmp(remotefilename, "lfn:", 4) == 0) {
+            if ((id = guidfromlfn(remotefilename + 4, errbuf, sizeof(errbuf))) == NULL) {
+                TRACE_ERR((stderr,"Cannot get guid for LFN-file %s. Error is %s (code: %d)\"\n",
+                            remotefilename + 4, errbuf, errno));
                 goto err_close_gfal;
             }
         } else {
