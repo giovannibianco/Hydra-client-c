@@ -216,20 +216,16 @@ static int glite_eds_put_metadata_single(char *endpoint, char *id,
     }
     if (glite_metadata_createEntry(ctx, id, "eds"))
     {
-        int err;
         asprintf(error, "glite_eds_put_metadata_single error (createEntry): %s", glite_catalog_get_error(ctx));
-        err = glite_catalog_get_errclass(ctx);
         glite_catalog_free(ctx);
-        return err;
+        return -1;
     }
 
     if (glite_metadata_setAttributes(ctx, id, attrs_count, attrs))
     {
-        int err;
         asprintf(error, "glite_eds_put_metadata_single error (setAttributes): %s", glite_catalog_get_error(ctx));
-        err = glite_catalog_get_errclass(ctx);
         glite_catalog_free(ctx);
-        return err;
+        return -1;
     }
     glite_catalog_free(ctx);
 
@@ -261,11 +257,9 @@ static int glite_eds_get_metadata_single(char *endpoint, char *id,
     result = glite_metadata_getAttributes(ctx, id, attrs_count, attrs, &result_cnt);
     if (result_cnt < 0)
     {
-        int err;
         asprintf(error, "glite_eds_init error: %s", glite_catalog_get_error(ctx));
-        err = glite_catalog_get_errclass(ctx);
         glite_catalog_free(ctx);
-        return err;
+        return -1;
     }
 
     data->hex_iv = get_attr_value(result, result_cnt, EDS_ATTR_IV, NULL);
@@ -305,7 +299,6 @@ static int glite_eds_get_metadata_single(char *endpoint, char *id,
 static int glite_eds_unregister_single(char *endpoint, char *id, char **error)
 {
     glite_catalog_ctx *ctx;
-    int res = 0;
     if (NULL == (ctx = glite_catalog_new(endpoint)))
     {
         asprintf(error, "glite_eds_unregister_single error: %s", glite_catalog_get_error(NULL));
@@ -315,11 +308,12 @@ static int glite_eds_unregister_single(char *endpoint, char *id, char **error)
     if (glite_metadata_removeEntry(ctx, id))
     {
         asprintf(error, "glite_eds_unregister_single error: %s", glite_catalog_get_error(ctx));
-        res = glite_catalog_get_errclass(ctx);
+        glite_catalog_free(ctx);
+        return -1;
     }
 
     glite_catalog_free(ctx);
-    return res;
+    return 0;
 }
 
 /**
@@ -669,7 +663,7 @@ int glite_eds_register(char *id, char *cipher, int keysize, char **error)
 {
     char *key, *iv;
     const EVP_CIPHER *type;
-    int ret = -1;
+    int ret;
 
     ret = _glite_eds_register_common(id, cipher, keysize,
         &key, &iv, &type, error);
@@ -688,12 +682,12 @@ EVP_CIPHER_CTX *glite_eds_register_encrypt_init(char *id,
     char *key, *iv;
     EVP_CIPHER_CTX *ectx;
     const EVP_CIPHER *type;
-    int ret = -1;
+    int ret;
 
     ret = _glite_eds_register_common(id, cipher, keysize,
         &key, &iv, &type, error);
 
-    if(ret == -1) return NULL;
+    if (ret) return NULL;
 
     if (NULL == (ectx = (EVP_CIPHER_CTX *)calloc(1, sizeof(*ectx))))
     {
@@ -877,7 +871,8 @@ int glite_eds_unregister(char *id, char **error)
 
     /* Remove the entry from each catalog. */
     for (i = 0; i < epcount; i++) {
-        res |= glite_eds_unregister_single(endpoints[i], id, error);
+	if (glite_eds_unregister_single(endpoints[i], id, error))
+		res = -1;
     }
 
     free_str_list(endpoints, epcount);
