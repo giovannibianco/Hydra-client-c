@@ -1,14 +1,20 @@
 /*
- *  Copyright (c) Members of the EGEE Collaboration. 2005.
- *  See http://eu-egee.org/partners/ for details on the copyright holders.
- *  For license conditions see the license file or http://eu-egee.org/license.html
+ * Copyright (c) Members of the EGEE Collaboration. 2006-2010.
+ * See http://www.eu-egee.org/partners/ for details on the copyright
+ * holders.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  *  GLite Data Management - Simple Fireman API
  *
  *  Authors: 
  *      Gabor Gombas <Gabor.Gombas@cern.ch>
  *      Akos Frohner <Akos.Frohner@cern.c>
- *  Version info: $Id: metadata-simple.h,v 1.1 2007-11-21 10:48:06 szamsu Exp $
+ *  Version info: $Id: metadata-simple.h,v 1.2 2010-04-07 11:11:06 jwhite Exp $
  *  Release: $Name: not supported by cvs2svn $
  *
  */
