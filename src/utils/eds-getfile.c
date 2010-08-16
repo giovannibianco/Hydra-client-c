@@ -320,13 +320,13 @@ int main(int argc, char* argv[])
         TRACE_LOG((stdout, "  LFN                     : %s  \n", remotefilename));
         TRACE_LOG((stdout, "  GUID                    : %s  \n", id));
 
-        char **replicas;
+        /* char **replicas;
         char **p;
         if((replicas = gfal_get_replicas(remotefilename, id, errbuf, sizeof(errbuf))) != NULL) {
             for(p = replicas; *p != NULL; p++) {
                 TRACE_LOG((stdout, "  SURL                    : %s  \n", *p));
             }
-        }
+	    } */
         TRACE_LOG((stdout, "  Remote Read [bytes]     : %lld\n", bytesread));
         TRACE_LOG((stdout, "  Locally Written [bytes] : %lld\n", byteswritten));
         if (abs_time != 0) {

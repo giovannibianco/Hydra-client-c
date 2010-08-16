@@ -236,7 +236,7 @@ int main(int argc, char **argv)
         int nread = read(fdump,buffer,TRANSFERBLOCKSIZE);
         if (nread <= 0) {
             if (nread == 0) errno = ENODATA;
-            TRACE_ERR((stderr,"Fatal error during local read. Error is \"%s (code: %d)\"\n",
+           TRACE_ERR((stderr,"Fatal error during local read. Error is \"%s (code: %d)\"\n",
                         strerror(errno), errno));
             TRACE_ERR((stderr,"Transfer Finished after %lld/%lld bytes!\n",
                         bytesread, size));
@@ -367,13 +367,13 @@ int main(int argc, char **argv)
         TRACE_LOG((stdout, "  LFN                     : %s  \n", remotefilename));
         TRACE_LOG((stdout, "  GUID                    : %s  \n", id));
 
-        char **replicas;
+        /* char **replicas;
         char **p;
         if ((replicas = gfal_get_replicas(remotefilename, id, errbuf, sizeof(errbuf))) != NULL) {
             for(p = replicas; *p != NULL; p++) {
                 TRACE_LOG((stdout, "  SURL                    : %s  \n", *p));
             }
-        }
+	    } */
         TRACE_LOG((stdout, "  Locally Read [bytes]    : %lld\n", bytesread));
         TRACE_LOG((stdout, "  Remote Written [bytes]  : %lld\n", byteswritten));
         if (abs_time != 0) {
