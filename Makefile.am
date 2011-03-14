@@ -8,7 +8,7 @@
 #  Authors: Zoltan Farkas <Zoltan.Farkas@cern.ch>
 #
 
-SUBDIRS		= interface src doc
+SUBDIRS		= interface src
 
 commonutdir = $(datadir)/doc/$(PACKAGE)
 dist_commonut_DATA = RELEASE-NOTES LICENSE
