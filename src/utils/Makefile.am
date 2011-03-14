@@ -22,7 +22,7 @@ bin_PROGRAMS = glite-eds-get \
 			   glite-eds-getacl
 
 glite_data_io_ldflags   = \
-	$(GLITE_LDFLAGS) -lgfal -lcgsi_plugin_gsoap_2.7 -lvomsc \
+	$(GLITE_LDFLAGS) -lgfal -lcgsi_plugin_gsoap_2.7 -lvomsapi \
 	-lglite_data_util -L$(GLITE_LOCATION)/lib -lgridsite_globus -lglite-sd-c \
 	-lglite_security_ssss \
 	$(GLOBUS_GSS_THR_LIBS) $(GLOBUS_SSL_THR_LIBS) \
