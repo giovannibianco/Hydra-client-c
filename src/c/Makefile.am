@@ -37,7 +37,7 @@ env.c:
 
 # Metadata SOAP library
 METADATA_NAMESPACE = metadata
-METADATA_WSDL_FILE = $(GLITE_LOCATION)/interface/org.glite.data-metadata-$(INTERFACE_VERSION).wsdl
+METADATA_WSDL_FILE = $(GLITE_LOCATION)/share/wsdl/hydra/org.glite.data-metadata-$(INTERFACE_VERSION).wsdl
 METADATA_SERVICE_H = org.glite.data-metadata-$(INTERFACE_VERSION).h
 METADATA_INCLUDE_DIR = $(top_builddir)/interface/glite/data/catalog/metadata/c
 METADATA_SRC   = metadataC.c metadataClient.c metadataClientLib.c metadataH.h metadataServer.c metadataServerLib.c metadataStub.h metadata.nsmap
