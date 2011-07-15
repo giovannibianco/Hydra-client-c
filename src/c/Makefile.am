@@ -58,6 +58,8 @@ else
 WSDL2HFLAGS=
 endif
 
+WSDL2HFLAGS=-z
+
 # Metadata Service Header File
 # Please note that the header file has to be post-processed since gsoap is not
 # handling the fault messages in the correct namespaces
