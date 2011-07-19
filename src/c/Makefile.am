@@ -52,13 +52,11 @@ WSDL2H_POSTFIX_METADATA=@echo 'No patch needed for '
 endif
 endif
 
-if USE_GSOAP_2_7_10
+if USE_GSOAP_2_7_13
 WSDL2HFLAGS=-z
-else
-WSDL2HFLAGS=-z
-@echo 'WSDL2HFLAGS has been set to [$(WSDL2HFLAGS)]'
 endif
 
+@echo 'WSDL2HFLAGS has been set to [$(WSDL2HFLAGS)]'
 
 # Metadata Service Header File
 # Please note that the header file has to be post-processed since gsoap is not
