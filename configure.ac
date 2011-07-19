@@ -18,7 +18,7 @@ AM_INIT_AUTOMAKE([1.6.3 subdir-objects])
 AC_COPYRIGHT([Copyright (c) 2004 The EU EGEE Project
 See LICENCE file for details
 ])
-AC_REVISION([$Revision: 1.11.2.8 $])
+AC_REVISION([$Revision: 1.11.2.9 $])
 
 # Check for the basic compile environment.
 AC_PROG_CC
@@ -90,7 +90,8 @@ AC_GLITE
 AC_GLITE_VERSION
 
 # Look for xsltproc & manpage stylesheets
-GLITE_DOCBOOK_MAN
+# 
+# GLITE_DOCBOOK_MAN
 
 # Location of the HTML documentation
 AC_ARG_WITH([htmldir],
