@@ -18,7 +18,7 @@ AM_INIT_AUTOMAKE([1.6.3 subdir-objects])
 AC_COPYRIGHT([Copyright (c) 2004 The EU EGEE Project
 See LICENCE file for details
 ])
-AC_REVISION([$Revision: 1.11.2.6 $])
+AC_REVISION([$Revision: 1.11.2.7 $])
 
 # Check for the basic compile environment.
 AC_PROG_CC
@@ -53,9 +53,9 @@ fi
 # Set GSOAP Properties
 AC_GSOAP
 
-# AM_CONDITIONAL(USE_GSOAP_2_7_6, [test "x$GSOAP_VERSION_NUM" = "x020706"])
-# AM_CONDITIONAL(USE_GSOAP_2_7_9, [test "x$GSOAP_VERSION_NUM" = "x020709"])
-# AM_CONDITIONAL(USE_GSOAP_2_7_10, [test "x$GSOAP_VERSION_NUM" = "x020710"])
+AM_CONDITIONAL(USE_GSOAP_2_7_6, [test "x$GSOAP_VERSION_NUM" = "x020706"])
+AM_CONDITIONAL(USE_GSOAP_2_7_9, [test "x$GSOAP_VERSION_NUM" = "x020709"])
+AM_CONDITIONAL(USE_GSOAP_2_7_10, [test "x$GSOAP_VERSION_NUM" = "x020710"])
 
 # OK. Setup the variable for the document production? JW.
 
