@@ -56,7 +56,7 @@ if USE_GSOAP_2_7_13
 WSDL2HFLAGS=-z
 endif
 
-@echo 'WSDL2HFLAGS has been set to [$(WSDL2HFLAGS)]'
+# @echo 'WSDL2HFLAGS has been set to [$(WSDL2HFLAGS)]'
 
 # Metadata Service Header File
 # Please note that the header file has to be post-processed since gsoap is not
