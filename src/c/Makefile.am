@@ -108,6 +108,7 @@ libglite_data_eds_simple_la_LIBADD = \
 	$(GLITE_LDFLAGS) -lglite_data_util \
 	-lglite-sd-c \
 	-lglite_security_ssss \
+        -lgsoap \
 	$(GLIB_LIBS) 	\
 	$(CGSI_GSOAP_LIBS) \
 	$(GLOBUS_GSS_THR_LIBS)
@@ -122,5 +123,6 @@ libglite_data_eds_simple_la_CFLAGS = \
 	$(GSOAP_CFLAGS) \
 	$(CGSI_GSOAP_CFLAGS) \
 	$(GLOBUS_THR_CFLAGS) \
-	-DWITH_SOAPDEFS_H
-
+	-DWITH_SOAPDEFS_H \
+        -DWITH_IPV6 \
+        -DWITH_DOM
