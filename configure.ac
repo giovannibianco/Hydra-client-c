@@ -18,7 +18,7 @@ AM_INIT_AUTOMAKE([1.6.3 subdir-objects])
 AC_COPYRIGHT([Copyright (c) 2004 The EU EGEE Project
 See LICENCE file for details
 ])
-AC_REVISION([$Revision: 1.11.2.9 $])
+AC_REVISION([$Revision: 1.11.2.10 $])
 
 # Check for the basic compile environment.
 AC_PROG_CC
@@ -48,8 +48,10 @@ AC_ARG_WITH([emi], AC_HELP_STRING([--with-emi ],[Set up for EMI build]),[WITH_EM
 if test "$WITH_EMI" = yes; then
        export GSOAP_LOCATION="/usr"
        export GSOAP_VERSION="2.7.13"
-       AM_CONDITIONAL(USE_GSOAP_2_7_13, [test "$GSOAP_VERSION" = "2.7.13"])
 fi
+
+AM_CONDITIONAL(USE_GSOAP_2_7_13, [test "x$WITH_EMI" = "xyes"])
+AC_SUBST(USE_GSOAP_2_7_13)
 
 # Set GSOAP Properties
 AC_GSOAP

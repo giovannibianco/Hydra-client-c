@@ -20,9 +20,15 @@ STDSOAP2_C_FIX=@echo 'No patch needed for stdsoap2.c'
 endif
 
 # Copy gsoap file
-stdsoap2.c:
-	cp -f $(GSOAP_LOCATION)/src/$@ $@
-	$(STDSOAP2_C_FIX)
+
+if USE_GSOAP_2_7_13
+        WSDL2HFLAGS= -z
+else
+        WSDL2HFLAGS= 
+        stdsoap2.c:
+                cp -f $(GSOAP_LOCATION)/src/stdsoap2.c stdsoap2.c
+                $(STDSOAP2_C_FIX)
+endif
 
 # Common Files
 soapdefs.h:
@@ -50,10 +56,6 @@ WSDL2H_POSTFIX_METADATA=sed -i.bak -e 's/ struct glite__AuthorizationException\*
 else
 WSDL2H_POSTFIX_METADATA=@echo 'No patch needed for '
 endif
-endif
-
-if USE_GSOAP_2_7_13
-WSDL2HFLAGS=-z
 endif
 
 # @echo 'WSDL2HFLAGS has been set to [$(WSDL2HFLAGS)]'
