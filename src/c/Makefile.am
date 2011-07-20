@@ -23,6 +23,8 @@ endif
 
 if USE_GSOAP_2_7_13
         WSDL2HFLAGS= -z
+	stdsoap2.c:
+		echo "stdsoap2.c not needed now." > $@
 else
         WSDL2HFLAGS= 
         stdsoap2.c:
