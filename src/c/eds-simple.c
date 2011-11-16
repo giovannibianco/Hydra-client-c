@@ -389,6 +389,7 @@ char ** glite_eds_get_catalog_endpoints(int *epcount, char **error)
     free(serv_name);
 
     *epcount = 1 + associated_count;
+    printf(" %s \n",**endpoints);
     return endpoints;
 }
 
