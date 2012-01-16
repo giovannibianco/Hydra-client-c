@@ -379,8 +379,10 @@ char ** glite_eds_get_catalog_endpoints(int *epcount, char **error)
     }
 
     endpoints[0] = strdup(service->endpoint);
+    /* fprintf(stdout, "First end point %s \n", endpoints[0]); */
     for (i = 0; i < associated_count; i++) {
         endpoints[i+1] = strdup(serv_list->services[i]->endpoint);
+        /* fprintf(stdout, "Next end point %s \n", endpoints[i+1]); */
     }
 
     /* free resources */

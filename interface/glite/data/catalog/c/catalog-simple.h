@@ -20,7 +20,7 @@
  *  Authors: 
  *      Gabor Gombas <Gabor.Gombas@cern.ch>
  *      Akos Frohner <Akos.Frohner@cern.ch>
- *  Version info: $Id: catalog-simple.h,v 1.2 2010-04-07 11:11:06 jwhite Exp $
+ *  Version info: $Id: catalog-simple.h,v 1.2.4.1 2012-01-16 15:54:27 jwhite Exp $
  *  Release: $Name: not supported by cvs2svn $
  *
  */
@@ -365,7 +365,7 @@ struct _glite_catalog_SURLEntry
 /* Service type used for Service Discovery */
 #define GLITE_FIREMAN_SD_TYPE		"org.glite.FiremanCatalog"
 #define GLITE_SEINDEX_SD_TYPE		"org.glite.SEIndex"
-#define GLITE_METADATA_SD_TYPE		"org.glite.Metadata"
+#define GLITE_METADATA_SD_TYPE          "org.glite.KeyStore"
 
 /* Environment variables to override default service types */
 #define GLITE_FIREMAN_SD_ENV		"GLITE_SD_FIREMAN_TYPE"
