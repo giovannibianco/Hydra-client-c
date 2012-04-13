@@ -18,7 +18,7 @@ AM_INIT_AUTOMAKE([1.6.3 subdir-objects])
 AC_COPYRIGHT([Copyright (c) 2004 The EU EGEE Project
 See LICENCE file for details
 ])
-AC_REVISION([$Revision: 1.11.2.10 $])
+AC_REVISION([$Revision: 1.11.2.10.2.1 $])
 
 # Check for the basic compile environment.
 AC_PROG_CC
@@ -64,8 +64,37 @@ AM_CONDITIONAL(USE_GSOAP_2_7_10, [test "x$GSOAP_VERSION_NUM" = "x020710"])
 
 AM_CONDITIONAL(HAVE_DOCBOOK_MAN, [test "x$DUMMY_VARIABLE" = "xxx"])
 
-# Set CGSI GSOAP Plugin Properties
-AC_CGSI_GSOAP
+#
+# set CGSI_GSOAP CFLAGS and LDFLAGS:
+#
+CGSI_GSOAP_CFLAGS="-I/usr/lib64/include/"
+CGSI_GSOAP_LDFLAGS="-lcgsi_plugin"
+AC_MSG_NOTICE([CGSI_GSOAP_CFLAGS=$CGSI_GSOAP_CFLAGS])
+AC_MSG_NOTICE([CGSI_GSOAP_LDFLAGS=$CGSI_GSOAP_LDFLAGS])
+
+#
+#AC_MSG_NOTICE([pkg-config cgsi_gsoap])
+#PKG_CHECK_MODULES(CGSI_GSOAP,
+#    [emi-gsoap-plugin],
+#    [
+#        AC_MSG_NOTICE([CGSI_GSOAP_CFLAGS=$CGSI_GSOAP_CFLAGS])
+#        AC_MSG_NOTICE([CGSI_GSOAP_LIBS=$CGSI_GSOAP_LIBS])
+#        ac_cppflags_backup=$CPPFLAGS
+#        ac_cflags_backup=$CFLAGS
+#        ac_ldflags_backup=$LDFLAGS
+#        CFLAGS=$CGSI_GSOAP_CFLAGS
+#        CPPFLAGS=$CGSI_GSOAP_CFLAGS
+#        LDFLAGS=$CGSI_GSOAP_LIBS
+#        AC_CHECK_HEADER([cgsi_plugin.h],,[AC_MSG_ERROR(cgsi_gsoap header cgsi_plugin.h not found)])
+#        CPPFLAGS=$ac_cppflags_backup
+#        CFLAGS=$ac_cflags_backup
+#        LDFLAGS=$ac_ldflags_backup
+#    ],
+#    [
+#        AC_MSG_ERROR([cgsi_gsoap libraries not available. Check the PKG_CONFIG_PATH environment variable.])
+#    ]
+#)
+
 
 # Arguments.
 AC_ARG_ENABLE(
@@ -82,10 +111,35 @@ AC_CHECK_HEADERS([\
 	sys/types.h\
 	])
 
-# Set Globus Properties
-have_globus=no
-AC_GLOBUS([], have_globus=yes, have_globus=no)
-AC_MSG_RESULT(["GLOBUS found $have_globus"])
+#
+# set Globus CFLAGS and LDFLAGS:
+#
+# CFLAGS=-I/usr/lib64/include/globus -I/usr/include/globus
+# LDFLAGS=-lglobus_common -lglobus_gssapi_gsi -lglobus_gssapi_error -lglobus_gss_assist -lglobus_gsi_credential
+#
+AC_MSG_NOTICE([pkg-config globus-gssapi-gsi])
+PKG_CHECK_MODULES(GLOBUS_GSI, 
+    [globus-gssapi-gsi],
+    [
+        AC_MSG_NOTICE([GLOBUS_GSI_CFLAGS=$GLOBUS_GSI_CFLAGS])
+        AC_MSG_NOTICE([GLOBUS_GSI_LIBS=$GLOBUS_GSI_LIBS])
+        ac_cppflags_backup=$CPPFLAGS
+        ac_cflags_backup=$CFLAGS
+        ac_ldflags_backup=$LDFLAGS
+        CFLAGS=$GLOBUS_GSI_CFLAGS
+        CPPFLAGS=$GLOBUS_GSI_CFLAGS
+        LDFLAGS=$GLOBUS_GSI_LIBS
+        AC_CHECK_HEADER([globus_common.h],,[AC_MSG_ERROR(Globus header globus_common.h not found)])
+        CPPFLAGS=$ac_cppflags_backup
+        CFLAGS=$ac_cflags_backup
+        LDFLAGS=$ac_ldflags_backup
+    ], 
+    [
+        AC_MSG_ERROR([Globus libraries (globus-gssapi-gsi) not available. Check the PKG_CONFIG_PATH environment variable.])
+#        AC_MSG_NOTICE([using CFLAGS=$CFLAGS])
+#        AC_CHECK_HEADER([globus_common.h],,[AC_MSG_ERROR(Globus header globus_common.h not found)])
+    ]
+) 
 
 # Set GLite Properties
 AC_GLITE
