@@ -18,7 +18,7 @@ AM_INIT_AUTOMAKE([1.6.3 subdir-objects])
 AC_COPYRIGHT([Copyright (c) 2004 The EU EGEE Project
 See LICENCE file for details
 ])
-AC_REVISION([$Revision: 1.11.2.10.2.1 $])
+AC_REVISION([$Revision: 1.11.2.10.2.2 $])
 
 # Check for the basic compile environment.
 AC_PROG_CC
@@ -67,7 +67,7 @@ AM_CONDITIONAL(HAVE_DOCBOOK_MAN, [test "x$DUMMY_VARIABLE" = "xxx"])
 #
 # set CGSI_GSOAP CFLAGS and LDFLAGS:
 #
-CGSI_GSOAP_CFLAGS="-I/usr/lib64/include/"
+CGSI_GSOAP_CFLAGS="-I/usr/lib64/"
 CGSI_GSOAP_LDFLAGS="-lcgsi_plugin"
 AC_MSG_NOTICE([CGSI_GSOAP_CFLAGS=$CGSI_GSOAP_CFLAGS])
 AC_MSG_NOTICE([CGSI_GSOAP_LDFLAGS=$CGSI_GSOAP_LDFLAGS])
