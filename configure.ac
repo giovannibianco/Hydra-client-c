@@ -18,7 +18,7 @@ AM_INIT_AUTOMAKE([1.6.3 subdir-objects])
 AC_COPYRIGHT([Copyright (c) 2004 The EU EGEE Project
 See LICENCE file for details
 ])
-AC_REVISION([$Revision: 1.11.2.10.2.2 $])
+AC_REVISION([$Revision: 1.11.2.10.2.3 $])
 
 # Check for the basic compile environment.
 AC_PROG_CC
@@ -67,10 +67,45 @@ AM_CONDITIONAL(HAVE_DOCBOOK_MAN, [test "x$DUMMY_VARIABLE" = "xxx"])
 #
 # set CGSI_GSOAP CFLAGS and LDFLAGS:
 #
-CGSI_GSOAP_CFLAGS="-I/usr/lib64/"
-CGSI_GSOAP_LDFLAGS="-lcgsi_plugin"
-AC_MSG_NOTICE([CGSI_GSOAP_CFLAGS=$CGSI_GSOAP_CFLAGS])
-AC_MSG_NOTICE([CGSI_GSOAP_LDFLAGS=$CGSI_GSOAP_LDFLAGS])
+#CGSI_GSOAP_CFLAGS="-I/usr/lib64/include/"
+#CGSI_GSOAP_LDFLAGS="-lcgsi_plugin"
+#AC_MSG_NOTICE([CGSI_GSOAP_CFLAGS=$CGSI_GSOAP_CFLAGS])
+#AC_MSG_NOTICE([CGSI_GSOAP_LDFLAGS=$CGSI_GSOAP_LDFLAGS])
+AC_ARG_WITH(cgsi-gsoap-location,
+[  --with-cgsi-gsoap-location=PFX     prefix where CGSI GSOAP plugin is installed. (/usr)],
+[],
+with_cgsi_gsoap_location=${CGSI_GSOAP_LOCATION:-/usr})
+     
+AC_MSG_RESULT([checking for cgsi-gsoap... ])
+
+if test -n "with_cgsi_gsoap_location" ; then
+       CGSI_GSOAP_LOCATION="$with_cgsi_gsoap_location"
+       CGSI_GSOAP_CFLAGS="-I$with_cgsi_gsoap_location/include"
+       if test "x$host_cpu" = "xx86_64"; then
+              ac_cgsi_gsoap_ldlib="-L$with_cgsi_gsoap_location/lib64"
+       else
+              ac_cgsi_gsoap_ldlib="-L$with_cgsi_gsoap_location/lib"
+       fi
+       if test -h "/usr/lib64" ; then
+              ac_cgsi_gsoap_ldlib="-L$with_cgsi_gsoap_location/lib"
+       fi
+       if ! test -e "/usr/lib64" ; then
+              ac_cgsi_gsoap_ldlib="-L$with_cgsi_gsoap_location/lib"
+       fi
+       CGSI_GSOAP_LDFLAGS="$ac_cgsi_gsoap_ldlib -lcgsi_plugin"
+else
+       CGSI_GSOAP_LOCATION=""
+       CGSI_GSOAP_CFLAGS=""
+       CGSI_GSOAP_LDFLAGS=""
+fi
+      
+AC_MSG_RESULT([CGSI_GSOAP_LOCATION set to $CGSI_GSOAP_LOCATION])
+AC_MSG_RESULT([CGSI_GSOAP_CFLAGS set to $CGSI_GSOAP_CFLAGS])
+AC_MSG_RESULT([CGSI_GSOAP_LDFLAGS set to $CGSI_GSOAP_LDFLAGS])
+    
+AC_SUBST(CGSI_GSOAP_LOCATION)
+AC_SUBST(CGSI_GSOAP_CFLAGS)
+AC_SUBST(CGSI_GSOAP_LDFLAGS)
 
 #
 #AC_MSG_NOTICE([pkg-config cgsi_gsoap])

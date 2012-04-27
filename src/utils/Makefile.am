@@ -43,7 +43,7 @@ glite_eds_rm_LDADD  = $(glite_data_io_ldflags)
 glite_data_eds_client_ldflags   = \
 	$(GLITE_LDFLAGS) ../c/libglite_data_eds_simple.la \
 	-lglite_data_util -L$(GLITE_LOCATION)/lib -lgridsite -lglite-sd-c \
-	$(GLOBUS_GSS_THR_LIBS) $(GLOBUS_SSL_THR_LIBS)
+	$(GLOBUS_GSS_THR_LIBS) $(GLOBUS_SSL_THR_LIBS) $(CGSI_GSOAP_LDFLAGS) 
 
 
 glite_eds_encrypt_SOURCES  = eds-encrypt.c
@@ -66,7 +66,7 @@ glite_data_hydra_client_ldflags   = \
 	$(GLITE_LDFLAGS) ../c/libglite_data_eds_simple.la \
 	-lglite_data_util -L$(GLITE_LOCATION)/lib -lgridsite -lglite-sd-c \
 	$(GLOBUS_GSS_THR_LIBS) $(GLOBUS_SSL_THR_LIBS) \
-	$(GLIB_LIBS)
+	$(GLIB_LIBS) $(CGSI_GSOAP_LDFLAGS) 
 
 glite_eds_setacl_SOURCES  = eds-setacl.c meta-tool-main.c util.c
 
