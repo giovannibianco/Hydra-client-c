@@ -24,10 +24,14 @@ endif
 if USE_GSOAP_2_7_13
         WSDL2HFLAGS= -z
 else
-        WSDL2HFLAGS= 
-        stdsoap2.c:
-                cp -f $(GSOAP_LOCATION)/src/stdsoap2.c stdsoap2.c
-                $(STDSOAP2_C_FIX)
+	if USE_GSOAP_2_7_16
+		WSDL2HFLAGS= -z1
+	else
+	        WSDL2HFLAGS= 
+        	stdsoap2.c:
+                	cp -f $(GSOAP_LOCATION)/src/stdsoap2.c stdsoap2.c
+                	$(STDSOAP2_C_FIX)
+	endif
 endif
 
 # Common Files

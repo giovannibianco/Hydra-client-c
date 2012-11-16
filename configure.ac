@@ -18,7 +18,7 @@ AM_INIT_AUTOMAKE([1.6.3 subdir-objects])
 AC_COPYRIGHT([Copyright (c) 2004 The EU EGEE Project
 See LICENCE file for details
 ])
-AC_REVISION([$Revision: 1.11.2.10.2.3 $])
+AC_REVISION([$Revision: 1.11.2.10.2.4 $])
 
 # Check for the basic compile environment.
 AC_PROG_CC
@@ -39,8 +39,10 @@ AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 
 WITH_EMI=no
+WITH_SL6=no
 
 AC_ARG_WITH([emi], AC_HELP_STRING([--with-emi ],[Set up for EMI build]),[WITH_EMI=yes],[WITH_EMI=noo])
+AC_ARG_WITH([sl6], AC_HELP_STRING([--with-sl6 ],[Set up for sl6 build]),[WITH_SL6=yes],[WITH_SL6=noo])
 
 # AC_ARG_WITH(emi,
 #  [  --with-emi        check for --with-emi ],  [  WITH_EMI=yes ])
@@ -49,6 +51,14 @@ if test "$WITH_EMI" = yes; then
        export GSOAP_LOCATION="/usr"
        export GSOAP_VERSION="2.7.13"
 fi
+
+if test "$WITH_SL6" = yes; then
+       export GSOAP_LOCATION="/usr"
+       export GSOAP_VERSION="2.7.16"
+fi
+
+AM_CONDITIONAL(USE_GSOAP_2_7_16, [test "x$WITH_SL6" = "xyes"])
+AC_SUBST(USE_GSOAP_2_7_16)
 
 AM_CONDITIONAL(USE_GSOAP_2_7_13, [test "x$WITH_EMI" = "xyes"])
 AC_SUBST(USE_GSOAP_2_7_13)
