@@ -20,12 +20,12 @@ STDSOAP2_C_FIX=@echo 'No patch needed for stdsoap2.c'
 endif
 
 # Copy gsoap file
-
+# put proper options in
 if USE_GSOAP_2_7_13
 WSDL2HFLAGS= -z
 else
 if USE_GSOAP_2_7_16
-WSDL2HFLAGS= -z1
+WSDL2HFLAGS= -v -e -y -z1\ -z2
 else
        WSDL2HFLAGS=
 	stdsoap2.c:
