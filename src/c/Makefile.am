@@ -79,10 +79,15 @@ $(METADATA_SERVICE_H): $(METADATA_WSDL_FILE) typemap.dat
 # It's possible this fails in the future as "_param_1" may become "_param_2" and therefore
 # will be back to the same situation.
 # This needs to be debugged properly in the future.
+# The fourth line fixes a problem in glite-eds-key-unregister...
+# If the key was unknown then the SOAP "not exists" fault was not
+# caught and decoded properly.
+# Again... a very dangerous fix for now...
 # 
 $(METADATA_SRC): $(METADATA_SERVICE_H)
 	$(SOAPCPP2) -I$(GSOAP_LOCATION)/include $(SOAPCPP2_FLAGS) -c -p $(METADATA_NAMESPACE) $<
 	if test metadataClient.c ; then sed -i -e '/if (!_param_1)/,+2d' metadataClient.c ; fi
+	if test metadataClient.c ; then sed -i -e '/if (!_param_2)/,+2d' metadataClient.c ; fi
 	if ! test -d $(METADATA_INCLUDE_DIR) ; then mkdir -p $(METADATA_INCLUDE_DIR) ; fi
 	cp -f metadataH.h metadataStub.h metadata.nsmap $(METADATA_INCLUDE_DIR)
 
