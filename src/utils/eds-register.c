@@ -57,6 +57,7 @@ static void print_usage_and_die(FILE * out){
     fprintf(out, "  -h      : print this screen\n");
     fprintf(out, "  -q      : quiet mode\n");
     fprintf(out, "  -v      : verbose mode\n");
+    fprintf(out, "  -t      : test endpoints\n");
     fprintf(out, "  -V      : print version and exit\n");
     if (out == stdout) {
         exit(0);
@@ -69,11 +70,15 @@ int main(int argc, char **argv)
     int flag, key_size = 0;
     char *cipher = NULL;
     int silent = 0;
+    int valid = 0;
 
-    while ((flag = getopt (argc, argv, "qhvVc:k:")) != -1) {
+    while ((flag = getopt (argc, argv, "qthvVc:k:")) != -1) {
         switch (flag) {
             case 'q':
                 silent = 1;
+                break;
+            case 't':
+                valid = 1;
                 break;
             case 'h':
                 print_usage_and_die(stdout);
@@ -113,7 +118,7 @@ int main(int argc, char **argv)
     {
         TRACE_ERR((stderr, "Error during glite_eds_register: %s\n", error));
         free(error);
-        if (errclass != GLITE_CATALOG_EXCEPTION_EXISTS) 
+        if (errclass != GLITE_CATALOG_EXCEPTION_EXISTS)  // this implies and error code of -1
         {
             if (glite_eds_unregister(argv[optind], &error))
             {
