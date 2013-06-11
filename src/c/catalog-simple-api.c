@@ -20,7 +20,7 @@
  *  Authors: 
  *      Gabor Gombas <Gabor.Gombas@cern.ch>
  *      Akos Frohner <Akos.Frohner@cern.ch>
- *  Version info: $Id: catalog-simple-api.c,v 1.2 2010-04-07 11:11:06 jwhite Exp $ 
+ *  Version info: $Id: catalog-simple-api.c,v 1.2.10.1 2013-06-11 08:44:11 jwhite Exp $ 
  *  Release: $Name: not supported by cvs2svn $
  *
  *
@@ -59,12 +59,16 @@ void _glite_catalog_fault_to_error(glite_catalog_ctx *ctx, const char *method)
 	if (ctx->decode_exception && ctx->soap->fault)
 	{
 		/* Look for a SOAP 1.1 fault */
-		if (ctx->soap->fault->detail)
+	  if (ctx->soap->fault->detail){
 			ctx->decode_exception(ctx, ctx->soap->fault->detail, method);
+                        // fprintf(stdout,"* JSW * found a SOAP 1.1 fault.\n");
+	  }
 		/* Look for a SOAP 1.2 fault */
-		if (ctx->soap->fault->SOAP_ENV__Detail)
+	  if (ctx->soap->fault->SOAP_ENV__Detail){
 			ctx->decode_exception(ctx,
-				ctx->soap->fault->SOAP_ENV__Detail, method);
+			ctx->soap->fault->SOAP_ENV__Detail, method);
+			// fprintf(stdout,"* JSW * found a SOAP 1.2 fault.\n");
+          }
 	}
 
 	/* If we did not manage to decode the exception, try generic error
@@ -77,24 +81,57 @@ void _glite_catalog_fault_to_error(glite_catalog_ctx *ctx, const char *method)
 
 		/* If the SOAP 1.1 detail is empty, try the SOAP 1.2 detail */
 		if (!detail && ctx->soap->fault &&
-				ctx->soap->fault->SOAP_ENV__Detail)
+		    ctx->soap->fault->SOAP_ENV__Detail){
 			detail = (const char **)&ctx->soap->fault->SOAP_ENV__Detail->__any;
-
+		}
+                // fprintf(stdout,"* JSW * \n code %s \n string %s \n detail %s \n",*code,*string,*detail);
 		/* Provide default messages */
 		if (!code || !*code)
 		{
 			code = g_alloca(sizeof(*code));
 			*code = "(SOAP fault code missing)";
+                        // fprintf(stdout,"* JSW * (SOAP fault code missing) \n");
 		}
 		if (!string || !*string)
 		{
 			string = g_alloca(sizeof(*string));
 			*string = "(SOAP fault string missing)";
+                        // fprintf(stdout,"* JSW * (SOAP fault string missing) \n");
 		}
+
+                // fprintf(stdout,"* JSW * \n -> code -> %s \n string %s \n -> detail -> %s \n",*code,*string,*detail);
+
+		if(strstr(*detail, "AuthorizationException")){
+                  char *tmp_err="User not authorized.";
+                  glite_catalog_set_error(ctx, GLITE_CATALOG_ERROR_SOAP,"%s", tmp_err);
+                  soap_end(ctx->soap);
+                  return;
+		  }
+
+		if(strstr(*detail, "NotExistsException")){
+                  char *tmp_err="Key does not exist.";
+                  glite_catalog_set_error(ctx, GLITE_CATALOG_ERROR_SOAP,"%s", tmp_err);
+                  soap_end(ctx->soap);
+                  return;
+		  }
+
+		if(strstr(*detail, "ExistsException")){
+                  char *tmp_err="Key already exists.";
+                  glite_catalog_set_error(ctx, GLITE_CATALOG_ERROR_SOAP,"%s", tmp_err);
+                  soap_end(ctx->soap);
+                  return;
+		  }
+
+		if(strstr(*detail, "InternalException")){
+                  char *tmp_err="Internal catalogue exception.";
+                  glite_catalog_set_error(ctx, GLITE_CATALOG_ERROR_SOAP,"%s", tmp_err);
+                  soap_end(ctx->soap);
+                  return;
+		  }
 
 		if (detail && *detail)
 			glite_catalog_set_error(ctx, GLITE_CATALOG_ERROR_SOAP,
-				"%s: SOAP fault: %s - %s (%s)", method, *code,
+				"%s: SOAP fault: %s - %s (%s)", "XXX", *code,
 				*string, *detail);
 		else
 			glite_catalog_set_error(ctx, GLITE_CATALOG_ERROR_SOAP,
@@ -266,6 +303,9 @@ const char *glite_catalog_get_error(glite_catalog_ctx *ctx)
 
 	if (!ctx->last_error)
 		return "No error";
+
+        // fprintf(stdout,"* JSW * glite_catalog_get_error getting the error::  %s\n",ctx->last_error);
+
 	return ctx->last_error;
 }
 

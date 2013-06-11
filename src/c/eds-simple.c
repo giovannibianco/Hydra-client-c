@@ -222,19 +222,19 @@ static int glite_eds_put_metadata_single(char *endpoint, char *id,
  
     if (NULL == (ctx = glite_catalog_new(endpoint)))
     {
-        asprintf(error, "glite_eds_put_metadata_single error (init): %s", glite_catalog_get_error(NULL));
-        return -1;
+      asprintf(error, " glite_eds_put_metadata_single error (init): %s", glite_catalog_get_error(NULL));
+       return -1;
     }
     if (glite_metadata_createEntry(ctx, id, "eds"))
     {
-        asprintf(error, "glite_eds_put_metadata_single error (createEntry): %s", glite_catalog_get_error(ctx));
+        asprintf(error, " glite_eds_put_metadata_single error (createEntry): %s", glite_catalog_get_error(ctx));
         glite_catalog_free(ctx);
         return -1;
     }
 
     if (glite_metadata_setAttributes(ctx, id, attrs_count, attrs))
     {
-        asprintf(error, "glite_eds_put_metadata_single error (setAttributes): %s", glite_catalog_get_error(ctx));
+        asprintf(error, " glite_eds_put_metadata_single error (setAttributes): %s", glite_catalog_get_error(ctx));
         glite_catalog_free(ctx);
         return -1;
     }
@@ -379,10 +379,10 @@ char ** glite_eds_get_catalog_endpoints(int *epcount, char **error)
     }
 
     endpoints[0] = strdup(service->endpoint);
-    /* fprintf(stdout, "First end point %s \n", endpoints[0]); */
+    // fprintf(stdout, "glite_eds_get_catalog_endpoints: First end point %s \n", endpoints[0]);
     for (i = 0; i < associated_count; i++) {
         endpoints[i+1] = strdup(serv_list->services[i]->endpoint);
-        /* fprintf(stdout, "Next end point %s \n", endpoints[i+1]); */
+        // fprintf(stdout, "glite_eds_get_catalog_endpoints: Next point %s \n", endpoints[i+1]);
     }
 
     /* free resources */
@@ -391,6 +391,108 @@ char ** glite_eds_get_catalog_endpoints(int *epcount, char **error)
     free(serv_name);
 
     *epcount = 1 + associated_count;
+    
+    return endpoints;
+}
+
+/**
+ * Get endpoints of default catalog service and all associated services.
+ * User should free the list (or error string) after use.
+ */
+char ** glite_eds_get_valid_catalog_endpoints(int *epcount, int *id,char **error)
+{
+    SDService *service;
+    SDServiceList * serv_list;
+    SDException exc;
+    const char *sd_type;
+    struct hydra_data data;
+    char * serv_name;
+    char **endpoints;
+    int associated_count;
+    int i,j;
+    int err = 0;
+    char *dummy_key,  *dummy_iv,  *dummy_cipher,  *dummy_info, *DEBUG;
+
+    dummy_key = "dummy_key";
+    dummy_iv = "dummy_iv";
+    dummy_cipher = "dummy_cipher";
+    dummy_info = "dummy_info";
+
+    DEBUG = NULL;
+ 
+    sd_type = getenv(GLITE_METADATA_SD_ENV);
+    if (!sd_type) sd_type = GLITE_METADATA_SD_TYPE;
+
+    serv_name = glite_discover_service_by_version(sd_type, NULL /*name*/, NULL /*version*/, error);
+    if (!serv_name)
+        return NULL;
+
+    service = SD_getService(serv_name, &exc);
+    if (!service) {
+        asprintf(error, "glite_eds_get_catalog_endpoints: %s", exc.reason);
+	SD_freeException(&exc);
+	free(serv_name);
+        return NULL;
+    }
+
+    /* Get list of (associated) services.
+     * NULL is returned also in case of numServices=0, that is not the error here.
+     */
+    serv_list = SD_listAssociatedServices(serv_name, sd_type, NULL/*site*/, NULL/*vos*/, &exc);
+
+    if (!serv_list)
+	associated_count = 0;
+    else
+        associated_count = serv_list->numServices;
+
+    /* Create list of endpoints */
+
+    endpoints = malloc(sizeof(char *) * (1 + associated_count));
+    
+    if (!endpoints) {
+        SD_freeService(service);
+        SD_freeServiceList(serv_list);
+	free(serv_name);
+        asprintf(error, "glite_eds_get_catalog_endpoints: out of memory");
+	return NULL;
+    }
+
+    endpoints[0] = strdup(service->endpoint);
+    if(DEBUG)
+        fprintf(stdout, "* JSW * First end point %s \n", endpoints[0]);
+
+    j = 1;
+    for (i = 0; i < associated_count; i++) {
+        endpoints[j] = strdup(serv_list->services[i]->endpoint);
+        const struct hydra_data data = {
+	  .hex_key = dummy_key,
+	  .hex_iv = dummy_iv,
+	  .cipher = dummy_cipher,
+	  .keyinfo = dummy_info,
+          .keys_needed = 1,
+          .key_index = 0 };
+        err = 0;
+        err = glite_eds_put_metadata_single(endpoints[j], id, &data, error); // if an error is generated here it is hard to tell why...
+        // fprintf(stdout, "* JSW * Error code is : %d \n", err);
+        if (err){
+                fprintf(stdout, "A connection could not be made to : %s \n", endpoints[j]);
+	}
+        else {
+            if(DEBUG)
+	        fprintf(stdout, "* JSW * end point %d %s  is valid.\n", j,endpoints[j]);
+            char *dummy_error = NULL;
+            glite_eds_unregister_single(endpoints[j], id, &dummy_error);
+            free(dummy_error);
+            j++;
+	}
+    }
+
+    /* free resources */
+    SD_freeService(service);
+    SD_freeServiceList(serv_list);
+    free(serv_name);
+
+    *epcount = j;
     
     return endpoints;
 }
@@ -409,13 +511,18 @@ static int glite_eds_put_metadata(char *id, char *hex_key, char *hex_iv, char *c
     int i;
     int err = 0;
 
+    // endpoints = glite_eds_get_valid_catalog_endpoints(&epcount, id,error);
     endpoints = glite_eds_get_catalog_endpoints(&epcount, error);
+
     if (!endpoints)
         return -1;
+    // fprintf(stdout," * JSW * endpoints %d \n",epcount);
 
     /* Calculate minimum count of pieces required to reconstruct the original key */
-    for(keys_needed = 0, i = epcount; i ; i/=2)
-	keys_needed += 1;
+    for(keys_needed = 0, i = epcount; i ; i/=2){
+        keys_needed += 1;
+	// fprintf(stdout,"glite_eds_put_metadata: i %d keys needed %d \n",i,keys_needed);
+     }
 
     /* Split the key by Shamir's Secret Sharing Scheme. */
     key_list = glite_security_ssss_split_key(hex_key, epcount, keys_needed);
@@ -686,6 +793,22 @@ int glite_eds_register(char *id, char *cipher, int keysize, char **error)
     return ret;
 }
 
+/**
+ * Register a new file in Hydra: create metadata entries (key/iv/...)
+ * But this version checks whether the key stores are valid 23/05/2013
+ */
+int glite_eds_register_valid(char *id, char *cipher, char *valid, int keysize, char **error)
+{
+    char *key, *iv;
+    const EVP_CIPHER *type;
+    int ret;
+
+    ret = _glite_eds_register_common(id, cipher, keysize,
+        &key, &iv, &type, error);
+
+    free(key); free(iv);
+    return ret;
+}
 /**
  * Register a new file in Hydra: create metadata entries (key/iv/...),
  * initalizes encryption context
