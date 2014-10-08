@@ -20,8 +20,19 @@
 
 # Unfortunately the localinit target runs _after_ the init-autotools target,
 # so we cannot do this from ant
-version=`grep ^module.version project/version.properties | cut -d= -f2 | sed -e 's/[         ]//g'`
+
+# version=`grep ^module.version project/version.properties | cut -d= -f2 | sed -e 's/[         ]//g'`
+version=`grep ^VERSION VERSION | cut -d= -f2 | sed -e 's/[         ]//g'`
+echo "Version = $version"
 echo "AC_DEFUN([GLITE_MODULE_VERSION],[$version])" > project/module-version.m4
+
+interface_version=2.0.0
+m4_macros_location=/usr/share/fts/aclocal/
+stageDir=""
+prefix=""
+metadata_interface_version="2.0.0"
+
+cp ${m4_macros_location}/glite.m4 ${m4_macros_location}/gsoap.m4 ${m4_macros_location}/glite-version.m4 ${m4_macros_location}/cgsi-gsoap.m4 ./project;
 
 mkdir -p src/autogen
 set -x
